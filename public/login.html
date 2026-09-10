@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brie — Ingresar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/style.css">
+<style>
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh;
+    background:linear-gradient(135deg, var(--violeta-dark), var(--violeta)); }
+  .login-card { background:#fff; border-radius:18px; padding:36px 32px; width:92%; max-width:380px;
+    box-shadow:0 24px 60px rgba(0,0,0,.25); }
+  .login-card .logo-circle { margin:0 auto 16px; }
+  .login-card h1 { font-family:'Playfair Display',serif; text-align:center; font-size:24px; color:var(--violeta-dark); }
+  .login-card p.sub { text-align:center; color:var(--text-muted); font-size:12px; margin:4px 0 24px; }
+  .login-card .form-group { margin-bottom:14px; }
+  .login-card .btn { width:100%; justify-content:center; padding:12px; margin-top:6px; }
+  .err { background:#FEE2E2; color:#991B1B; font-size:12px; padding:10px 12px; border-radius:8px; margin-bottom:12px; display:none; }
+</style>
+</head>
+<body>
+<div class="login-container login-card" >
+  <div class="logo-circle"><span>B</span></div>
+  <h2 style="text-align:center;margin-bottom:20px;color:var(--violeta);">Brie Servicio Gastronómico</h2>
+  
+  <!-- Botón para alternar -->
+  <div style="text-align:center;margin-bottom:20px;font-size:14px;">
+    <span id="toggleLabel">¿No tenés cuenta?</span>
+    <button id="toggleButton" onclick="toggleRegistro(event)" 
+          style="background:none;border:none;color:var(--naranja);text-decoration:none;font-weight:600;cursor:pointer;">Registrate acá
+    </button>
+    <!-- <a href="#" onclick="toggleRegistro(event)" style="color:var(--naranja);text-decoration:none;font-weight:600;">Registrate acá</a> -->
+  </div>
+
+  <!-- FORMULARIO DE LOGIN -->
+  <form id="loginForm">
+    <div style="margin-bottom:15px;">
+      
+      <div class="form-group"><label>Email</label><input id="email" type="email" placeholder="usuario@dominio.com"></div>
+    </div>
+    <div style="margin-bottom:20px;">
+     
+      <div class="form-group"><label>Contraseña</label><input type="password" id="password" placeholder="••••••••"></div>
+    </div>
+    <button type="submit" class="btn btn-primary" id="btnLogin" >Ingresar</button>
+  </form>
+
+  <!-- FORMULARIO DE REGISTRO (Oculto por defecto) -->
+  <form id="registerForm" style="display:none;">
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:12px;margin-bottom:5px;">Nombre Completo</label>
+      <input type="text" id="regNombre" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" placeholder="Tu nombre">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:12px;margin-bottom:5px;">Email</label>
+      <input type="email" id="regEmail" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" placeholder="ej: usuario@mail.com">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:12px;margin-bottom:5px;">Teléfono (para el repartidor)</label>
+      <input type="tel" id="regTelefono" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" placeholder="+54 11 ...">
+    </div>
+    <div style="position: relative; margin-bottom: 10px;">
+      <label style="display:block;font-size:12px;margin-bottom:5px;">Dirección de Entrega</label>
+      
+      <!-- 1. El Input -->
+      <input type="text" id="regDireccion" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" placeholder="Escribí tu dirección..." autocomplete="off">
+      
+      <!-- 2. La Lista DEBE estar CERRADAMENTE aquí dentro -->
+      <ul id="address-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-top: none; max-height: 200px; overflow-y: auto; z-index: 1000; list-style: none; padding: 0; margin: 0; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></ul>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label style="display:block;font-size:12px;margin-bottom:5px;">Piso / Departamento</label>
+      <input type="text" id="regPiso" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" placeholder="Ej: Piso 3, Depto A">
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:12px;margin-bottom:5px;">Contraseña</label>
+      <input type="password" id="regPassword" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" placeholder="Mínimo 6 caracteres">
+    </div>
+    <button type="submit" id="btnRegister" style="width:100%;padding:12px;background:var(--naranja);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Crear Cuenta y Entrar</button>
+  </form>
+
+</div>
+
+<script src="./js/login.js"></script>
+<script src="./js/permisos.js"></script>
+</body>
+</html>
