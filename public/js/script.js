@@ -940,7 +940,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cfg = await api('/config');
         setTema(cfg.tema);
     } catch {
-        setTema(localStorage.getItem('sb-palette') || 'violeta');
+        setTema(localStorage.getItem('sb-palette') || 'teal');
     }
     app.init();
 });

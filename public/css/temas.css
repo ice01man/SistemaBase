@@ -13,8 +13,6 @@
 :root[data-palette="violeta"]{
   --primary:#6366f1;
   --primary-hover:#4f46e5;
-  --bg-body:#f8fafc;
-  --bg-body-secondary:#cabbff;
   --secondary:#e0c2fd;
   --secondary-hover:#c084fc;
   --primary-glow:rgba(99,102,241,.6);
@@ -31,8 +29,6 @@
 :root[data-palette="trueno"]{
   --primary:#0891b2;
   --primary-hover:#0e7490;
-  --bg-body:#f8fafc;
-  --bg-body-secondary:#c2f0f9;
   --secondary:#22d3ee;
   --secondary-hover:#06b6d4;
   --primary-glow:rgba(8,145,178,.6);
@@ -49,8 +45,6 @@
 :root[data-palette="bosque"]{
   --primary:#15803d;
   --primary-hover:#166534;
-  --bg-body:#f8fafc  ;
-  --bg-body-secondary:#ecfad1;
   --secondary:#22c55e;
   --secondary-hover:#16a34a;
   --primary-glow:rgba(21,128,61,.6);
