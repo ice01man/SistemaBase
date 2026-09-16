@@ -7,7 +7,7 @@ import * as memoria from '../config/memoria.js';
 const SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 const firmarToken = (u) =>
-  jwt.sign({ id: u.id || u._id, rol: u.role, email: u.email }, SECRET, { expiresIn: '8h' });
+  jwt.sign({ id: u.id || u._id, rol: u.rol, email: u.email }, SECRET, { expiresIn: '8h' });
 
 export const login = async (req, res) => {
   try {
@@ -25,11 +25,11 @@ export const login = async (req, res) => {
     // --- MODO MONGO ---
     const u = await User.findOne({ email });
     if (!u) return res.status(401).json({ error: 'Credenciales inválidas' });
-    const ok = await bcrypt.compare(password, u.password);
+    const ok = await bcrypt.compare(password, u.passwordHash);
     if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
     return res.json({
       token: firmarToken(u),
-      user: { id: u._id, name: u.name, email: u.email, role: u.role },
+      user: { id: u._id, name: u.nombre, email: u.email, role: u.rol },
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 };

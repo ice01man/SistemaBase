@@ -383,9 +383,9 @@ const app = {
         const rows = state.users.map(u => `
             <tr>
                 <td>${uid(u)}</td>
-                <td>${u.name}</td>
+                <td>${u.nombre}</td>
                 <td>${u.email}</td>
-                <td><span style="padding: 2px 8px; background: ${u.role === 'admin' ? '#dbeafe' : '#f1f5f9'}; color: ${u.role === 'admin' ? '#1e40af' : '#475569'}; border-radius: 12px; font-size: 0.8rem;">${u.role}</span></td>
+                <td><span style="padding: 2px 8px; background: ${u.rol === 'admin' ? '#dbeafe' : '#f1f5f9'}; color: ${u.rol === 'admin' ? '#1e40af' : '#475569'}; border-radius: 12px; font-size: 0.8rem;">${u.rol}</span></td>
                 <td>
                     <button onclick="app.openUserModal('${uid(u)}')" class="btn btn-outline" style="padding: 0.3rem 0.6rem;">✏️</button>
                     <button onclick="app.deleteUser('${uid(u)}')" class="btn btn-danger" style="padding: 0.3rem 0.6rem;">🗑️</button>
@@ -412,7 +412,7 @@ const app = {
     openUserModal: (id = null) => {
         state.editingId = id;
         state.editType = 'user';
-        const user = id ? state.users.find(u => uid(u) == id) : { name: '', email: '', role: 'cliente' };
+        const user = id ? state.users.find(u => uid(u) == id) : { nombre: '', email: '', rol: 'cliente' };
 
         const html = `
             <div class="modal">
@@ -424,7 +424,7 @@ const app = {
                     <form id="userForm">
                         <div class="form-group">
                             <label class="form-label">Nombre</label>
-                            <input type="text" id="u_name" class="form-control" value="${user.name || ''}" required>
+                            <input type="text" id="u_name" class="form-control" value="${user.nombre || ''}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email</label>
@@ -437,9 +437,9 @@ const app = {
                         <div class="form-group">
                             <label class="form-label">Rol</label>
                             <select id="u_role" class="form-control">
-                                <option value="admin"   ${user.role === 'admin'   ? 'selected' : ''}>Admin</option>
-                                <option value="user"    ${user.role === 'user'    ? 'selected' : ''}>User (empleado)</option>
-                                <option value="cliente" ${user.role === 'cliente' ? 'selected' : ''}>Cliente</option>
+                                <option value="admin"   ${user.rol === 'admin'   ? 'selected' : ''}>Admin</option>
+                                <option value="user"    ${user.rol === 'user'    ? 'selected' : ''}>User (empleado)</option>
+                                <option value="cliente" ${user.rol === 'cliente' ? 'selected' : ''}>Cliente</option>
                             </select>
                         </div>
                     </form>
@@ -455,14 +455,14 @@ const app = {
     },
 
     saveUser: async () => {
-        const name = document.getElementById('u_name').value.trim();
+        const nombre = document.getElementById('u_name').value.trim();
         const email = document.getElementById('u_email').value.trim();
-        const role = document.getElementById('u_role').value;
+        const rol = document.getElementById('u_role').value;
         const password = document.getElementById('u_password').value;
 
-        if (!name || !email) { showToast('Complete todos los campos', 'error'); return; }
+        if (!nombre || !email) { showToast('Complete todos los campos', 'error'); return; }
 
-        const body = { name, email, role };
+        const body = { nombre, email, rol };
         if (password) body.password = password;
 
         try {

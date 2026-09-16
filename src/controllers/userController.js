@@ -13,23 +13,22 @@ export const getUsers = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
-    if (getModo() !== 'mongo') return res.status(201).json(memoria.createUser({ name, email, password, role }));
-    const hash = await bcrypt.hash(password || '123456', 10);
-    const saved = await new User({ name, email, password: hash, role }).save();
-    const { password: _, ...safe } = saved.toObject();
+    const { nombre, email, password, rol } = req.body;
+    if (getModo() !== 'mongo') return res.status(201).json(memoria.createUser({ nombre, email, password, rol }));
+    const saved = await new User({ nombre, email, passwordHash: password, rol }).save();
+    const { passwordHash: _, ...safe } = saved.toObject();   // ← ocultar el hash, campo correcto
     res.status(201).json(safe);
   } catch (e) { res.status(500).json({ message: e.message }); }
 };
 
 export const updateUser = async (req, res) => {
   try {
-    const { name, email, role, password } = req.body;
+    const { nombre, email, rol, password } = req.body;
     if (getModo() !== 'mongo') {
-      const upd = memoria.updateUser(req.params.id, { name, email, role, ...(password ? { password } : {}) });
+      const upd = memoria.updateUser(req.params.id, { nombre, email, rol, ...(password ? { password } : {}) });
       return upd ? res.json(upd) : res.status(404).json({ message: 'No encontrado' });
     }
-    const data = { name, email, role };
+    const data = { nombre, email, rol  };
     if (password) data.password = await bcrypt.hash(password, 10);
     const upd = await User.findByIdAndUpdate(req.params.id, data, { new: true }).select('-password');
     if (!upd) return res.status(404).json({ message: 'No encontrado' });

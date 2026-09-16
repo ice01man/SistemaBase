@@ -4,7 +4,7 @@ import { getProducts,getProductsByDay ,createProduct,updateProduct ,deleteProduc
 
 const router = express.Router();
 
-router.get('/', authRequired, getProducts);
+router.get('/',  getProducts);
 router.get('/products', authRequired, getProductsByDay);
 router.put('/:id', authRequired, updateProduct);
 router.post('/', authRequired, createProduct);
