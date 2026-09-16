@@ -1,8 +1,10 @@
 import jwt from 'jsonwebtoken';
+import { getModo } from '../config/modo.js';
+
 
 export function authRequired(req, res, next) {
   
-  if (process.env.PERSISTENCIA !== 'mongo') {
+  if (getModo() !== 'mongo') {            
     req.usuario = { rol: 'admin', dev: true };
     return next();
   }

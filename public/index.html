@@ -9,6 +9,7 @@
 <!-- Asegúrate de tener este archivo CSS -->
 <!--<link rel="stylesheet" href="./css/style.css"> -->
 <link rel="stylesheet" href="./css/newstyle.css">
+<link rel="stylesheet" href="./css/temas.css">
 </head>
 <body>
 
@@ -50,6 +51,7 @@ VISTAS PÚBLICAS
             <li><a href="#" onclick="app.renderDashboard()" id="nav-dash" class="active">📊 Dashboard</a></li>
             <li><a href="#" onclick="app.renderUsers()" id="nav-users">👥 Usuarios</a></li>
             <li><a href="#" onclick="app.renderProducts()" id="nav-products">📦 Productos</a></li>
+            <li><a href="#" onclick="app.renderApariencia()" id="nav-apariencia">🎨 Apariencia</a></li>
         </ul>
         <div class="sidebar-footer">
             <button onclick="app.logout()" class="btn btn-outline" style="width: 100%; border-color: #475569; color: #cbd5e1;">Cerrar Sesión</button>
@@ -60,8 +62,9 @@ VISTAS PÚBLICAS
         <div class="topbar">
             <button class="btn btn-outline" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display: none;" id="mobile-menu-btn">☰</button>
             <div class="user-info">
-                <span id="user-name-display">Admin Usuario</span>
+                <span id="user-name-display">Usuario</span>
                 <div class="avatar">A</div>
+                <button onclick="app.logout()" class="btn btn-outline" style="padding:0.35rem 0.9rem;">Cerrar Sesión</button>
             </div>
         </div>
         
@@ -77,7 +80,6 @@ VISTAS PÚBLICAS
 <div id="modal-container" class="modal-overlay hidden">
     <!-- Contenido del modal dinámico -->
 </div>
-<div class="toast-container" id="toastContainer"></div>
 
 <!-- SCRIPTS -->
 <!--  Lógica de Login y Cerrar Sesión -->

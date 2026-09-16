@@ -1,25 +1,55 @@
- /* =========================================
-ESTADO Y SIMULACIÓN DE DATOS
+/* =========================================
+   CONFIG
+========================================= */
+const API_URL = '/api';
+
+// emoji por categoría para las cards del menú público
+const EMOJI_CAT = { 'Gourmet': '✨', 'Del Día': '🍲', 'Vegano': '🌱', 'Sandwich': '🥪' };
+
+/* =========================================
+   ESTADO
+   - users/products/orders vienen del backend (arrancan vacíos)
+   - solo token y cart se guardan en localStorage
 ========================================= */
 const state = {
     currentUser: JSON.parse(localStorage.getItem('user')) || null,
-    users: JSON.parse(localStorage.getItem('users')) || [
-        { id: 1, name: 'Admin Principal', email: 'admin@system.com', role: 'admin' },
-        { id: 2, name: 'Juan Perez', email: 'juan@test.com', role: 'user' },
-        { id: 3, name: 'Maria Lopez', email: 'maria@test.com', role: 'user' }
-    ],
-    products: JSON.parse(localStorage.getItem('products')) || [
-        { id: 1, name: 'Servicio Web Básico', price: 500, category: 'Servicio' },
-        { id: 2, name: 'Licencia Pro', price: 1200, category: 'Software' },
-        { id: 3, name: 'Soporte Mensual', price: 300, category: 'Soporte' }
-    ],
-    editingId: null, // ID del elemento que se está editando
-    editType: null   // 'user' o 'product'
+    token: localStorage.getItem('token') || null,
+    users: [],
+    products: [],
+    orders: [],
+    cart: JSON.parse(localStorage.getItem('cart')) || [],
+    diaActivo: 'lunes',
+    editingId: null,
+    editType: null
 };
 
+// id transparente: mongo devuelve _id, memoria devuelve id
+const uid = (o) => (o && (o._id || o.id));
+
 /* =========================================
-    UTILIDADES UI
-    ========================================= */
+   HELPER DE API (fetch + token + errores)
+========================================= */
+async function api(path, { method = 'GET', body } = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+
+    const res = await fetch(`${API_URL}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined
+    });
+
+    if (!res.ok) {
+        let msg = 'Error en la solicitud';
+        try { const j = await res.json(); msg = j.error || j.message || msg; } catch {}
+        throw new Error(msg);
+    }
+    return res.status === 204 ? null : res.json();
+}
+
+/* =========================================
+   UTILIDADES UI
+========================================= */
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -35,9 +65,13 @@ function closeModal() {
     state.editType = null;
 }
 
+function saveCart() {
+    localStorage.setItem('cart', JSON.stringify(state.cart));
+}
+
 /* =========================================
-    LÓGICA DE NAVEGACIÓN PÚBLICA
-    ========================================= */
+   VISTAS PÚBLICAS
+========================================= */
 const publicViews = {
     home: `
         <section class="hero">
@@ -45,119 +79,31 @@ const publicViews = {
             <p>Una solución integral para gestionar tus necesidades. Eficiencia, seguridad y escalabilidad en un solo lugar.</p>
         </section>
         <section class="banner-menu">
-        <!-- Botones de Días -->
-        <div class="dias-selector">
-            <button class="btn-dia active" onclick="cambiarDia('lunes', this)">📅 Lunes</button>
-            <button class="btn-dia" onclick="cambiarDia('martes', this)">📅 Martes</button>
-            <button class="btn-dia" onclick="cambiarDia('miercoles', this)">📅 Miércoles</button>
-            <button class="btn-dia" onclick="cambiarDia('jueves', this)">📅 Jueves</button>
-            <button class="btn-dia" onclick="cambiarDia('viernes', this)">📅 Viernes</button>
-        </div>
-
-        <h2 class="banner-titulo" id="titulo-dia">Menú del Lunes</h2>
-        <p class="banner-subtitulo">Pasa el cursor sobre cada opción para ver los ingredientes</p>
-
-        <!-- Contenedor del Menú (Lunes) -->
-        <div class="cards-banner-container" id="menu-container">
-            
-            <!-- Gourmet -->
-            <div class="card card-expandable">
-            <div class="card-header-compact">
-                <h3>✨ Gourmet</h3>
-                <img src="./img/lunes-gourmet.jpg" alt="Gourmet" class="thumb-img">
+            <div class="dias-selector">
+                <button class="btn-dia active" onclick="cambiarDia('lunes', this)">📅 Lunes</button>
+                <button class="btn-dia" onclick="cambiarDia('martes', this)">📅 Martes</button>
+                <button class="btn-dia" onclick="cambiarDia('miercoles', this)">📅 Miércoles</button>
+                <button class="btn-dia" onclick="cambiarDia('jueves', this)">📅 Jueves</button>
+                <button class="btn-dia" onclick="cambiarDia('viernes', this)">📅 Viernes</button>
             </div>
-            <div class="card-content">
-                <img src="./img/lunes-gourmet.jpg" alt="Gourmet" class="featured-img">
-                <h4>Lomo al Vino con Papas Rústicas</h4>
-                <p class="descripcion">Medallón de lomo reducido al vino tinto con papas al horno.</p>
-                <div class="ingredientes-seccion">
-                <h5>Ingredientes:</h5>
-                <ul>
-                    <li>🥩 Medallón de lomo</li>
-                    <li>🍷 Reducción de vino tinto</li>
-                    <li>🥔 Papas rústicas</li>
-                </ul>
-                </div>
+            <div class="modal-titulo">
+                <h2 class="banner-titulo" id="titulo-dia">Menú del Lunes</h2>
+                <p class="banner-subtitulo">Pasa el cursor sobre cada opción para ver los ingredientes</p>
             </div>
-            </div>
-
-            <!-- Del Día -->
-            <div class="card card-expandable">
-            <div class="card-header-compact">
-                <h3>🍲 Del Día</h3>
-                <img src="./img/lunes-deldia.jpg" alt="Del Día" class="thumb-img">
-            </div>
-            <div class="card-content">
-                <img src="./img/lunes-deldia.jpg" alt="Del Día" class="featured-img">
-                <h4>Milanesa con Puré</h4>
-                <p class="descripcion">Clásica milanesa de carne con puré casero.</p>
-                <div class="ingredientes-seccion">
-                <h5>Ingredientes:</h5>
-                <ul>
-                    <li>🥩 Carne seleccionada</li>
-                    <li>🥔 Puré de papa casero</li>
-                    <li>🍋 Limón fresco</li>
-                </ul>
-                </div>
-            </div>
-            </div>
-
-            <!-- Vegano -->
-            <div class="card card-expandable">
-            <div class="card-header-compact">
-                <h3>🌱 Vegano</h3>
-                <img src="./img/lunes-vegano.jpg" alt="Vegano" class="thumb-img">
-            </div>
-            <div class="card-content">
-                <img src="./img/lunes-vegano.jpg" alt="Vegano" class="featured-img">
-                <h4>Lasaña de Berenjenas</h4>
-                <p class="descripcion">Capas de berenjena con salsa natural y queso vegetal.</p>
-                <div class="ingredientes-seccion">
-                <h5>Ingredientes:</h5>
-                <ul>
-                    <li>🍆 Berenjenas asadas</li>
-                    <li>🍅 Salsa pomodoro</li>
-                    <li>🧀 Queso vegetal</li>
-                </ul>
-                </div>
-            </div>
-            </div>
-
-            <!-- Sandwich -->
-            <div class="card card-expandable">
-            <div class="card-header-compact">
-                <h3>🥪 Sandwich</h3>
-                <img src="./img/lunes-sandwich.jpg" alt="Sandwich" class="thumb-img">
-            </div>
-            <div class="card-content">
-                <img src="./img/lunes-sandwich.jpg" alt="Sandwich" class="featured-img">
-                <h4>Pollo, Palta y Tomate</h4>
-                <p class="descripcion">Pechuga desmenuzada, palta fresca y aderezo especial.</p>
-                <div class="ingredientes-seccion">
-                <h5>Ingredientes:</h5>
-                <ul>
-                    <li>🥖 Pan artesanal</li>
-                    <li>🍗 Pollo desmenuzado</li>
-                    <li>🥑 Palta fresca</li>
-                    <li>🍅 Tomate en rodajas</li>
-                </ul>
-                </div>
-            </div>
-            </div>
-
-        </div>
+            <!-- Las cards se generan dinámicamente desde el backend -->
+            <div class="cards-banner-container" id="menu-container"></div>
         </section>
     `,
     about: `
         <h2 class="section-title">Quiénes Somos</h2>
         <div class="card" style="margin-bottom: 2rem;">
-            <p style="margin-bottom: 1rem; line-height: 1.6;">Somos una empresa dedicada al desarrollo de soluciones tecnológicas avanzadas. Nuestro equipo está conformado por expertos en ingeniería de software, diseño UX/UI y gestión de bases de datos.</p>
-            <p style="line-height: 1.6;">Nuestra misión es simplificar procesos complejos mediante software intuitivo, permitiendo a nuestros clientes enfocarse en lo que mejor saben hacer: su negocio.</p>
+            <p>Somos una empresa dedicada al desarrollo de soluciones tecnológicas avanzadas. Nuestro equipo está conformado por expertos en ingeniería de software, diseño UX/UI y gestión de bases de datos.</p>
+            <p >Nuestra misión es simplificar procesos complejos mediante software intuitivo, permitiendo a nuestros clientes enfocarse en lo que mejor saben hacer: su negocio.</p>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center;">
+        <div class="card-quienes-somos">
             <div>
                 <h3>Nuestra Visión</h3>
-                <p style="color: var(--text-muted); margin-top: 0.5rem;">Ser el referente latinoamericano en sistemas de gestión empresarial para el 2030.</p>
+                <p>Ser el referente latinoamericano en sistemas de gestión empresarial para el 2030.</p>
             </div>
             <div style="background: #e2e8f0; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
                 Imagen del Equipo
@@ -185,15 +131,15 @@ const publicViews = {
             <div>
                 <div class="card" style="margin-bottom: 1rem;">
                     <h4>Oficina Principal</h4>
-                    <p style="color: var(--text-muted);">Av. Tecnológica 1234, Ciudad del Conocimiento</p>
+                    <p >Av. Tecnológica 1234, Ciudad del Conocimiento</p>
                 </div>
                 <div class="card" style="margin-bottom: 1rem;">
                     <h4>Email</h4>
-                    <p style="color: var(--text-muted);">contacto@misistema.com</p>
+                    <p >contacto@misistema.com</p>
                 </div>
                 <div class="card">
                     <h4>Teléfono</h4>
-                    <p style="color: var(--text-muted);">+54 11 1234 5678</p>
+                    <p >+54 11 1234 5678</p>
                 </div>
             </div>
         </div>
@@ -204,47 +150,52 @@ const publicViews = {
                 <h2 style="text-align: center; margin-bottom: 1.5rem;">Iniciar Sesión</h2>
                 <form id="loginForm">
                     <div class="form-group">
-                        <label class="form-label">Usuario</label>
-                        <input type="text" id="username" class="form-control" placeholder="admin" value="admin">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="admin@demo.com" value="admin@demo.com">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Contraseña</label>
-                        <input type="password" id="password" class="form-control" placeholder="****" value="1234">
+                        <input type="password" id="password" class="form-control" placeholder="****" value="admin123">
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Entrar</button>
                 </form>
-                <p style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
-                    Demo: Usuario <b>admin</b> / Clave <b>1234</b>
+                <p >
+                    Demo: <b>admin@demo.com</b> / <b>user@demo.com</b> / <b>cliente@demo.com</b> — clave <b>{rol}123</b>
                 </p>
             </div>
         </div>
     `
- 
 };
 
 function cambiarDia(dia, elemento) {
-  // Cambiar clase activa en los botones
-  document.querySelectorAll('.btn-dia').forEach(btn => btn.classList.remove('active'));
-  elemento.classList.add('active');
-
-  // Actualizar título
-  const titulo = document.getElementById('titulo-dia');
-  titulo.textContent = `Menú del ${dia.charAt(0).toUpperCase() + dia.slice(1)}`;
-
-  // Aquí puedes actualizar las imágenes y descripciones según el día seleccionado
+    document.querySelectorAll('.btn-dia').forEach(btn => btn.classList.remove('active'));
+    elemento.classList.add('active');
+    state.diaActivo = dia;
+    document.getElementById('titulo-dia').textContent = `Menú del ${dia.charAt(0).toUpperCase() + dia.slice(1)}`;
+    app.renderMenuDia(dia);
 }
 
+/* Tema del sitio (paleta) */
+function setTema(p) {
+    document.documentElement.dataset.palette = p;
+    localStorage.setItem('sb-palette', p);
+    // en producción, además: api('/config', { method:'PATCH', body:{ tema:p } });
+}
+
+/* =========================================
+   NAVEGACIÓN
+========================================= */
 function navigate(viewName) {
     const main = document.getElementById('main-content');
     const publicLayout = document.getElementById('public-layout');
     const privateLayout = document.getElementById('private-layout');
 
-    // Manejo de sesión
     if (viewName === 'login' && state.currentUser) {
         app.init();
         return;
     }
 
+    // Vistas privadas de admin (desde el sidebar)
     if (viewName === 'dashboard' || viewName === 'users' || viewName === 'products') {
         if (!state.currentUser) {
             showToast('Debes iniciar sesión primero', 'error');
@@ -253,84 +204,156 @@ function navigate(viewName) {
         }
         publicLayout.classList.add('hidden');
         privateLayout.classList.remove('hidden');
-        if(viewName === 'dashboard') app.renderDashboard();
-        if(viewName === 'users') app.renderUsers();
-        if(viewName === 'products') app.renderProducts();
+        if (viewName === 'dashboard') app.renderDashboard();
+        if (viewName === 'users') app.renderUsers();
+        if (viewName === 'products') app.renderProducts();
         return;
     }
 
-    // Renderizar vistas públicas
+    // Vistas públicas
     publicLayout.classList.remove('hidden');
     privateLayout.classList.add('hidden');
-    
+
     if (publicViews[viewName]) {
         main.innerHTML = publicViews[viewName];
     }
 
-    // Event Listeners específicos de vistas
+    if (viewName === 'home') {
+        state.diaActivo = 'lunes';
+        app.cargarMenuHome();
+    }
+
     if (viewName === 'login') {
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            if (u === 'admin' && p === '1234') {
-                state.currentUser = { name: 'Admin Usuario', email: 'admin@system.com', role: 'admin' };
-                localStorage.setItem('user', JSON.stringify(state.currentUser));
-                showToast('Login exitoso');
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            try {
+                const data = await api('/auth/login', { method: 'POST', body: { email, password } });
+                state.token = data.token;
+                state.currentUser = data.user;
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                showToast(`Bienvenido ${data.user.name}`);
                 app.init();
-            } else {
-                showToast('Credenciales inválidas', 'error');
+            } catch (err) {
+                showToast(err.message || 'Credenciales inválidas', 'error');
             }
         });
     }
-    
-    // Scroll top
+
     window.scrollTo(0, 0);
 }
 
 /* =========================================
-    LÓGICA DE APLICACIÓN (DASHBOARD)
-    ========================================= */
+   APLICACIÓN
+========================================= */
 const app = {
 
-    altoViewport: () => {
-        const contenedor = document.getElementById('main-content');
-        const anchoViewport = window.innerHeight;
-        let xx = anchoViewport -140
-        /*contenedor.style.height = `${xx}px`; */
-
-    },
-    
-    init: () => {
-        if (state.currentUser) {
-            document.getElementById('public-layout').classList.add('hidden');
-            document.getElementById('private-layout').classList.remove('hidden');
-            document.getElementById('user-name-display').textContent = state.currentUser.name;
-        
-            app.renderDashboard();
-        } else {
+    init: async () => {
+        if (!state.currentUser) {
             navigate('home');
+            return;
+        }
+
+        document.getElementById('public-layout').classList.add('hidden');
+        document.getElementById('private-layout').classList.remove('hidden');
+        document.getElementById('user-name-display').textContent = state.currentUser.name;
+
+        const rol = state.currentUser.role;
+        const sidebar = document.getElementById('sidebar');
+
+        try {
+            await app.fetchProducts();
+            if (rol === 'admin') await app.fetchUsers();
+        } catch (e) {
+            showToast('Error de conexión con el servidor', 'error');
+        }
+
+        if (rol === 'admin') {
+            sidebar?.classList.remove('hidden');
+            app.renderDashboard();
+        } else if (rol === 'user') {
+            sidebar?.classList.add('hidden');
+            app.renderDespacho();
+        } else {
+            sidebar?.classList.add('hidden');
+            app.renderClientMenu();
         }
     },
 
     logout: () => {
         state.currentUser = null;
+        state.token = null;
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
         showToast('Sesión cerrada');
         navigate('home');
     },
 
     setActiveLink: (id) => {
         document.querySelectorAll('.sidebar-nav a').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+        document.getElementById(id)?.classList.add('active');
     },
 
-    // --- DASHBOARD HOME ---
+    /* ---------- FETCH DE DATOS ---------- */
+    fetchProducts: async () => { state.products = await api('/products'); },
+    fetchUsers:    async () => { state.users = await api('/users'); },
+
+    /* ============================================================
+       MENÚ PÚBLICO DINÁMICO (home)
+    ============================================================ */
+    cargarMenuHome: async () => {
+        const cont = document.getElementById('menu-container');
+        if (cont) cont.innerHTML = '<p >Cargando menú...</p>';
+        try {
+            await app.fetchProducts();
+            app.renderMenuDia(state.diaActivo || 'lunes');
+        } catch (e) {
+            if (cont) cont.innerHTML = '<p >No se pudo cargar el menú.</p>';
+        }
+    },
+
+    renderMenuDia: (dia) => {
+        const cont = document.getElementById('menu-container');
+        if (!cont) return;
+
+        const delDia = state.products.filter(p => p.day === dia);
+        if (!delDia.length) {
+            cont.innerHTML = `<p>No hay platos cargados para ${dia}.</p>`;
+            return;
+        }
+
+        cont.innerHTML = delDia.map(p => {
+            const emoji = EMOJI_CAT[p.category] || '🍽️';
+            const ing = (p.ingredients || []).map(i => `<li>${i}</li>`).join('');
+            return `
+                <div class="card card-expandable">
+                    <div class="card-header-compact">
+                        <h3>${emoji} ${p.category}</h3>
+                        <img src="${p.image}" alt="${p.category}" class="thumb-img">
+                    </div>
+                    <div class="card-content">
+                        <img src="${p.image}" alt="${p.category}" class="featured-img">
+                        <h4>${p.name}</h4>
+                        <p class="descripcion">${p.description || ''}</p>
+                        <div class="ingredientes-seccion">
+                            <h5>Ingredientes:</h5>
+                            <ul>${ing}</ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    /* ---------- DASHBOARD (admin) ---------- */
     renderDashboard: () => {
         app.setActiveLink('nav-dash');
         const container = document.getElementById('admin-content');
+        const valorInv = state.products.reduce((acc, p) => acc + Number(p.price || 0), 0);
         container.innerHTML = `
-            <h2 style="margin-bottom: 1.5rem;">Resumen General</h2>
+            <div class="modal-titulo"><h2>Resumen General</h2></div>
             <div class="stats-grid">
                 <div class="card stat-card">
                     <span class="stat-value">${state.users.length}</span>
@@ -341,50 +364,44 @@ const app = {
                     <span class="stat-label">Productos Activos</span>
                 </div>
                 <div class="card stat-card">
-                    <span class="stat-value">$${state.products.reduce((acc, p) => acc + Number(p.price), 0)}</span>
+                    <span class="stat-value">$${valorInv}</span>
                     <span class="stat-label">Valor Inventario</span>
                 </div>
             </div>
             <div class="card">
                 <h3>Actividad Reciente</h3>
-                <p style="color: var(--text-muted); margin-top: 1rem;">No hay actividad reciente para mostrar.</p>
+                <p>No hay actividad reciente para mostrar.</p>
             </div>
         `;
     },
 
-    // --- ABM USUARIOS ---
+    /* ---------- ABM USUARIOS (admin) ---------- */
     renderUsers: () => {
         app.setActiveLink('nav-users');
         const container = document.getElementById('admin-content');
-        
-        let rows = state.users.map(u => `
+
+        const rows = state.users.map(u => `
             <tr>
-                <td>${u.id}</td>
+                <td>${uid(u)}</td>
                 <td>${u.name}</td>
                 <td>${u.email}</td>
                 <td><span style="padding: 2px 8px; background: ${u.role === 'admin' ? '#dbeafe' : '#f1f5f9'}; color: ${u.role === 'admin' ? '#1e40af' : '#475569'}; border-radius: 12px; font-size: 0.8rem;">${u.role}</span></td>
                 <td>
-                    <button onclick="app.openUserModal(${u.id})" class="btn btn-outline" style="padding: 0.3rem 0.6rem;">✏️</button>
-                    <button onclick="app.deleteUser(${u.id})" class="btn btn-danger" style="padding: 0.3rem 0.6rem;">🗑️</button>
+                    <button onclick="app.openUserModal('${uid(u)}')" class="btn btn-outline" style="padding: 0.3rem 0.6rem;">✏️</button>
+                    <button onclick="app.deleteUser('${uid(u)}')" class="btn btn-danger" style="padding: 0.3rem 0.6rem;">🗑️</button>
                 </td>
             </tr>
         `).join('');
 
         container.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div class="modal-titulo">
                 <h2>Gestión de Usuarios</h2>
                 <button onclick="app.openUserModal()" class="btn btn-primary">+ Nuevo Usuario</button>
             </div>
             <div class="card table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Rol</th>
-                            <th>Acciones</th>
-                        </tr>
+                        <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr>
                     </thead>
                     <tbody>${rows}</tbody>
                 </table>
@@ -395,8 +412,8 @@ const app = {
     openUserModal: (id = null) => {
         state.editingId = id;
         state.editType = 'user';
-        const user = id ? state.users.find(u => u.id === id) : { name: '', email: '', role: 'user' };
-        
+        const user = id ? state.users.find(u => uid(u) == id) : { name: '', email: '', role: 'cliente' };
+
         const html = `
             <div class="modal">
                 <div class="modal-header">
@@ -407,17 +424,22 @@ const app = {
                     <form id="userForm">
                         <div class="form-group">
                             <label class="form-label">Nombre</label>
-                            <input type="text" id="u_name" class="form-control" value="${user.name}" required>
+                            <input type="text" id="u_name" class="form-control" value="${user.name || ''}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email</label>
-                            <input type="email" id="u_email" class="form-control" value="${user.email}" required>
+                            <input type="email" id="u_email" class="form-control" value="${user.email || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contraseña ${id ? '(dejar vacío para no cambiar)' : ''}</label>
+                            <input type="password" id="u_password" class="form-control" placeholder="${id ? '••••••' : ''}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Rol</label>
                             <select id="u_role" class="form-control">
-                                <option value="user" ${user.role === 'user' ? 'selected' : ''}>Usuario</option>
-                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrador</option>
+                                <option value="admin"   ${user.role === 'admin'   ? 'selected' : ''}>Admin</option>
+                                <option value="user"    ${user.role === 'user'    ? 'selected' : ''}>User (empleado)</option>
+                                <option value="cliente" ${user.role === 'cliente' ? 'selected' : ''}>Cliente</option>
                             </select>
                         </div>
                     </form>
@@ -432,72 +454,69 @@ const app = {
         document.getElementById('modal-container').classList.remove('hidden');
     },
 
-    saveUser: () => {
-        const name = document.getElementById('u_name').value;
-        const email = document.getElementById('u_email').value;
+    saveUser: async () => {
+        const name = document.getElementById('u_name').value.trim();
+        const email = document.getElementById('u_email').value.trim();
         const role = document.getElementById('u_role').value;
+        const password = document.getElementById('u_password').value;
 
         if (!name || !email) { showToast('Complete todos los campos', 'error'); return; }
 
-        if (state.editingId) {
-            // Update
-            const idx = state.users.findIndex(u => u.id === state.editingId);
-            state.users[idx] = { id: state.editingId, name, email, role };
-            showToast('Usuario actualizado');
-        } else {
-            // Create
-            const newId = state.users.length > 0 ? Math.max(...state.users.map(u => u.id)) + 1 : 1;
-            state.users.push({ id: newId, name, email, role });
-            showToast('Usuario creado');
-        }
-        
-        localStorage.setItem('users', JSON.stringify(state.users));
-        closeModal();
-        app.renderUsers();
-    },
+        const body = { name, email, role };
+        if (password) body.password = password;
 
-    deleteUser: (id) => {
-        if (confirm('¿Está seguro de eliminar este usuario?')) {
-            state.users = state.users.filter(u => u.id !== id);
-            localStorage.setItem('users', JSON.stringify(state.users));
-            showToast('Usuario eliminado');
+        try {
+            if (state.editingId) {
+                await api(`/users/${state.editingId}`, { method: 'PUT', body });
+                showToast('Usuario actualizado');
+            } else {
+                await api('/users', { method: 'POST', body });
+                showToast('Usuario creado');
+            }
+            closeModal();
+            await app.fetchUsers();
             app.renderUsers();
-        }
+        } catch (e) { showToast(e.message, 'error'); }
     },
 
-    // --- ABM PRODUCTOS ---
+    deleteUser: async (id) => {
+        if (!confirm('¿Está seguro de eliminar este usuario?')) return;
+        try {
+            await api(`/users/${id}`, { method: 'DELETE' });
+            showToast('Usuario eliminado');
+            await app.fetchUsers();
+            app.renderUsers();
+        } catch (e) { showToast(e.message, 'error'); }
+    },
+
+    /* ---------- ABM PRODUCTOS (admin) ---------- */
     renderProducts: () => {
         app.setActiveLink('nav-products');
         const container = document.getElementById('admin-content');
 
-        let rows = state.products.map(p => `
+        const rows = state.products.map(p => `
             <tr>
-                <td>${p.id}</td>
+                <td>${uid(p)}</td>
                 <td>${p.name}</td>
-                <td>${p.category}</td>
+                <td>${p.day || '-'}</td>
+                <td>${p.category || '-'}</td>
                 <td>$${p.price}</td>
                 <td>
-                    <button onclick="app.openProductModal(${p.id})" class="btn btn-outline" style="padding: 0.3rem 0.6rem;">✏️</button>
-                    <button onclick="app.deleteProduct(${p.id})" class="btn btn-danger" style="padding: 0.3rem 0.6rem;">🗑️</button>
+                    <button onclick="app.openProductModal('${uid(p)}')" class="btn btn-outline" style="padding: 0.3rem 0.6rem;">✏️</button>
+                    <button onclick="app.deleteProduct('${uid(p)}')" class="btn btn-danger" style="padding: 0.3rem 0.6rem;">🗑️</button>
                 </td>
             </tr>
         `).join('');
 
         container.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div class="modal-titulo">
                 <h2>Gestión de Productos</h2>
                 <button onclick="app.openProductModal()" class="btn btn-primary">+ Nuevo Producto</button>
             </div>
             <div class="card table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Acciones</th>
-                        </tr>
+                        <tr><th>ID</th><th>Nombre</th><th>Día</th><th>Categoría</th><th>Precio</th><th>Acciones</th></tr>
                     </thead>
                     <tbody>${rows}</tbody>
                 </table>
@@ -508,8 +527,15 @@ const app = {
     openProductModal: (id = null) => {
         state.editingId = id;
         state.editType = 'product';
-        const prod = id ? state.products.find(p => p.id === id) : { name: '', price: '', category: 'Servicio' };
-        
+        const prod = id
+            ? state.products.find(p => uid(p) == id)
+            : { name: '', category: '', day: 'lunes', description: '', ingredients: [], image: '', price: '' };
+
+        const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+        const opcionesDia = dias.map(d =>
+            `<option value="${d}" ${prod.day === d ? 'selected' : ''}>${d.charAt(0).toUpperCase() + d.slice(1)}</option>`
+        ).join('');
+
         const html = `
             <div class="modal">
                 <div class="modal-header">
@@ -519,20 +545,32 @@ const app = {
                 <div class="modal-body">
                     <form id="productForm">
                         <div class="form-group">
-                            <label class="form-label">Nombre del Producto</label>
-                            <input type="text" id="p_name" class="form-control" value="${prod.name}" required>
+                            <label class="form-label">Nombre del Plato</label>
+                            <input type="text" id="p_name" class="form-control" value="${prod.name || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Día</label>
+                            <select id="p_day" class="form-control">${opcionesDia}</select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Categoría</label>
-                            <select id="p_category" class="form-control">
-                                <option value="Servicio" ${prod.category === 'Servicio' ? 'selected' : ''}>Servicio</option>
-                                <option value="Software" ${prod.category === 'Software' ? 'selected' : ''}>Software</option>
-                                <option value="Soporte" ${prod.category === 'Soporte' ? 'selected' : ''}>Soporte</option>
-                            </select>
+                            <input type="text" id="p_category" class="form-control" value="${prod.category || ''}" placeholder="Gourmet / Del Día / Vegano / Sandwich" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="p_description" class="form-control" rows="2" required>${prod.description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ingredientes (separados por coma)</label>
+                            <input type="text" id="p_ingredients" class="form-control" value="${(prod.ingredients || []).join(', ')}" placeholder="Pan, Pollo, Palta">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Imagen (ruta o URL)</label>
+                            <input type="text" id="p_image" class="form-control" value="${prod.image || ''}" placeholder="./img/lunes-gourmet.jpg" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Precio ($)</label>
-                            <input type="number" id="p_price" class="form-control" value="${prod.price}" required>
+                            <input type="number" id="p_price" class="form-control" value="${prod.price || ''}" required>
                         </div>
                     </form>
                 </div>
@@ -546,41 +584,304 @@ const app = {
         document.getElementById('modal-container').classList.remove('hidden');
     },
 
-    saveProduct: () => {
-        const name = document.getElementById('p_name').value;
-        const category = document.getElementById('p_category').value;
+    saveProduct: async () => {
+        const name = document.getElementById('p_name').value.trim();
+        const day = document.getElementById('p_day').value;
+        const category = document.getElementById('p_category').value.trim();
+        const description = document.getElementById('p_description').value.trim();
+        const ingredients = document.getElementById('p_ingredients').value
+            .split(',').map(s => s.trim()).filter(Boolean);
+        const image = document.getElementById('p_image').value.trim();
         const price = document.getElementById('p_price').value;
 
-        if (!name || !price) { showToast('Complete todos los campos', 'error'); return; }
+        if (!name || !price) { showToast('Complete al menos nombre y precio', 'error'); return; }
 
-        if (state.editingId) {
-            const idx = state.products.findIndex(p => p.id === state.editingId);
-            state.products[idx] = { id: state.editingId, name, category, price };
-            showToast('Producto actualizado');
-        } else {
-            const newId = state.products.length > 0 ? Math.max(...state.products.map(p => p.id)) + 1 : 1;
-            state.products.push({ id: newId, name, category, price });
-            showToast('Producto creado');
-        }
+        const body = { name, category, day, description, ingredients, image, price: Number(price) };
 
-        localStorage.setItem('products', JSON.stringify(state.products));
-        closeModal();
-        app.renderProducts();
+        try {
+            if (state.editingId) {
+                await api(`/products/${state.editingId}`, { method: 'PUT', body });
+                showToast('Producto actualizado');
+            } else {
+                await api('/products', { method: 'POST', body });
+                showToast('Producto creado');
+            }
+            closeModal();
+            await app.fetchProducts();
+            app.renderProducts();
+        } catch (e) { showToast(e.message, 'error'); }
     },
 
-    deleteProduct: (id) => {
-        if (confirm('¿Está seguro de eliminar este producto?')) {
-            state.products = state.products.filter(p => p.id !== id);
-            localStorage.setItem('products', JSON.stringify(state.products));
+    deleteProduct: async (id) => {
+        if (!confirm('¿Está seguro de eliminar este producto?')) return;
+        try {
+            await api(`/products/${id}`, { method: 'DELETE' });
             showToast('Producto eliminado');
+            await app.fetchProducts();
             app.renderProducts();
+        } catch (e) { showToast(e.message, 'error'); }
+    },
+
+    /* ============================================================
+       MÓDULO CARRITO (rol cliente)
+    ============================================================ */
+    renderClientMenu: () => {
+            const container = document.getElementById('admin-content');
+            const total = state.cart.reduce((a, b) => a + b.qty, 0);
+
+            const cards = state.products.map(p => `
+                <div class="card" style="padding:1.2rem; display:flex; flex-direction:column;">
+                    <img src="${p.image}" alt="${p.name}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:0.8rem;">
+                    <h3 style="color:var(--text-main); font-size:1.05rem;">${p.name}</h3>
+                    <p >${p.category || ''} · ${p.day || ''}</p>
+                    <div style="font-size:1.3rem; font-weight:bold; color:var(--accent); margin-bottom:0.8rem;">$${p.price}</div>
+                    <button onclick="app.addToCart('${uid(p)}')" class="btn btn-primary" style="width:100%; margin-top:auto;">Agregar</button>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div style="max-width:1200px; margin:0 auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; border-bottom:1px solid var(--glass-border); padding-bottom:1rem;">
+                        <div class="modal-titulo"><h2>📦 Menú Disponible</h2></div>
+                        <div style="display:flex; gap:1rem;">
+                            <button onclick="app.renderCart()" class="btn btn-primary">🛒 Carrito <span id="cart-count" style="background:rgba(255,255,255,0.2); padding:0 6px; border-radius:10px; font-size:0.8rem;">${total}</span></button>
+                            <button onclick="app.renderOrderStatus()" class="btn btn-ghost">Mis Pedidos</button>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.5rem;">
+                        ${cards}
+                    </div>
+                </div>
+            `;
+        },
+
+    addToCart: (productId) => {
+        const product = state.products.find(p => uid(p) == productId);
+        if (!product) return;
+
+        const existing = state.cart.find(item => uid(item) == productId);
+        if (existing) {
+            existing.qty++;
+        } else {
+            state.cart.push({ ...product, qty: 1 });
         }
+        saveCart();
+        showToast('Producto agregado');
+        app.updateCartCount();
+    },
+
+    updateCartCount: () => {
+        const count = state.cart.reduce((acc, item) => acc + item.qty, 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) badge.innerText = count;
+    },
+
+    renderCart: () => {
+        const container = document.getElementById('admin-content');
+        const volver = `<button onclick="app.renderClientMenu()" class="btn btn-ghost">← Volver al Menú</button>`;
+
+        if (state.cart.length === 0) {
+            container.innerHTML = `
+                <div style="max-width:700px; margin:0 auto;">
+                    <div class="card" style="text-align:center; padding:3rem;">
+                        <div class="modal-titulo"><h2>Carrito Vacío 🛒</h2></div><br>${volver}
+                    </div>
+                </div>`;
+            return;
+        }
+
+        let total = 0;
+        const rows = state.cart.map(item => {
+            const subtotal = item.price * item.qty;
+            total += subtotal;
+            return `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>$${item.price}</td>
+                    <td>${item.qty}</td>
+                    <td>$${subtotal}</td>
+                    <td><button onclick="app.removeFromCart('${uid(item)}')" class="btn btn-danger" style="padding:0.3rem 0.6rem;">❌</button></td>
+                </tr>`;
+        }).join('');
+
+        container.innerHTML = `
+            <div style="max-width:800px; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <div class="modal-titulo"><h2>🛒 Tu Carrito</h2></div>
+                    ${volver}
+                </div>
+                <div class="card table-container" style="padding:0;"><table><thead><tr><th>Prod</th><th>Precio</th><th>Cant</th><th>Sub</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem;">
+                    <h3>Total: $${total}</h3>
+                    <button onclick="app.placeOrder()" class="btn btn-primary">Confirmar Pedido</button>
+                </div>
+            </div>
+        `;
+    },
+
+    removeFromCart: (productId) => {
+        state.cart = state.cart.filter(item => uid(item) != productId);
+        saveCart();
+        app.renderCart();
+        app.updateCartCount();
+    },
+
+    placeOrder: async () => {
+        if (state.cart.length === 0) return showToast('Carrito vacío', 'error');
+        const total = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+        try {
+            await api('/orders', {
+                method: 'POST',
+                body: {
+                    items: state.cart.map(i => ({ productId: uid(i), name: i.name, price: i.price, qty: i.qty })),
+                    totalAmount: total,
+                    user: uid(state.currentUser)
+                }
+            });
+            showToast('¡Pedido realizado con éxito!');
+            state.cart = [];
+            saveCart();
+            app.updateCartCount();
+            app.renderOrderStatus();
+        } catch (e) {
+            showToast(e.message || 'Error al guardar pedido', 'error');
+        }
+    },
+
+    renderOrderStatus: async () => {
+        const container = document.getElementById('admin-content');
+        const volver = `<button onclick="app.renderClientMenu()" class="btn btn-ghost" style="margin-bottom:1rem;">← Volver al Menú</button>`;
+        container.innerHTML = `<div style="max-width:800px; margin:0 auto;">${volver}<p>Cargando pedidos...</p></div>`;
+
+        try {
+            const orders = await api(`/orders/mis-pedidos?user=${encodeURIComponent(uid(state.currentUser))}`);
+            let html = `<div style="max-width:800px; margin:0 auto;">${volver}<div class="modal-titulo"><h2>📜 Mis Pedidos</h2></div><br>`;
+            if (!orders.length) html += '<p>Todavía no tenés pedidos.</p>';
+            orders.forEach(o => {
+                html += `<div class="card" style="margin-bottom:1rem; border-left:4px solid var(--accent);">
+                    <div style="display:flex; justify-content:space-between;"><span>${new Date(o.createdAt).toLocaleDateString()}</span> <b>${o.status}</b></div>
+                    <p >Total: $${o.totalAmount}</p>
+                </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+        } catch (e) {
+            container.innerHTML = `<div style="max-width:800px; margin:0 auto;">${volver}
+                <div class="card" style="padding:2rem; text-align:center; color:var(--text-muted);">No se pudieron cargar los pedidos.</div>
+            </div>`;
+        }
+    },
+
+    renderApariencia() {
+        const temas = [
+            { id:'violeta', nombre:'Violeta', desc:'Look actual de la marca' , color: '#7c3aed' },
+            { id:'trueno',  nombre:'Trueno',  desc:'Cian + ámbar' , color: '#06b6d4' },
+            { id:'bosque',  nombre:'Bosque',  desc:'Verde + azul' , color: '#10b981' },
+        ];
+        const actual = document.documentElement.dataset.palette || 'violeta';
+        document.getElementById('admin-content').innerHTML = `
+            <div class="modal-titulo">
+                <h2 >Apariencia del sitio</h2>
+            </div>
+            <div class="card">
+            <p >
+                Elegí la paleta. El cambio se aplica a toda la tienda.
+            </p>
+            <div style="display:flex;gap:1rem;flex-wrap:wrap; flex-direction: column; align-content: flex-start;">
+                ${temas.map(t => `
+                <button class="btn btn-secondary"
+                    style="background-color: ${t.color} !important; flex:1;min-width:160px;flex-direction:column;align-items:flex-start;gap:.25rem${t.id===actual ? ';outline:2px solid var(--accent)' : ''}"
+                    onclick="app.guardarTema('${t.id}')">
+                    <strong>${t.nombre}</strong>
+                    <span >${t.desc}</span>
+                </button>`).join('')}
+            </div>
+            </div>`;
+    },
+
+    guardarTema: async (id) => {
+        try {
+            await api('/config', { method: 'PATCH', body: { tema: id } });
+            setTema(id);
+            showToast('Tema actualizado');
+            app.renderApariencia();
+        } catch (e) {
+            showToast(e.message || 'No se pudo guardar el tema', 'error');
+        }
+    },
+
+    /* ============================================================
+       MÓDULO DESPACHO (rol user / empleado)
+    ============================================================ */
+    renderDespacho: async () => {
+        const container = document.getElementById('admin-content');
+        container.innerHTML = 'Cargando pedidos...';
+        try {
+            const orders = await api('/orders/pendientes');
+
+            let html = `<div class="modal-titulo"><h2>🚚 Despacho de Pedidos</h2></div>
+                <p >Pedidos pendientes de tomar y despachar.</p>`;
+
+            if (!orders.length) {
+                html += '<div class="card" style="text-align:center; padding:2rem;">No hay pedidos en cola 🎉</div>';
+                container.innerHTML = html;
+                return;
+            }
+
+            const rows = orders.map(o => {
+                const accion = o.status === 'Pendiente'
+                    ? `<button onclick="app.tomarPedido('${uid(o)}')" class="btn btn-primary" style="padding:0.3rem 0.8rem;">Tomar</button>`
+                    : `<button onclick="app.despacharPedido('${uid(o)}')" class="btn btn-primary" style="padding:0.3rem 0.8rem;">Despachar</button>`;
+                const items = (o.items || []).map(i => `${i.qty}× ${i.name}`).join(', ');
+                return `
+                    <tr>
+                        <td>${new Date(o.createdAt).toLocaleString()}</td>
+                        <td>${items}</td>
+                        <td>$${o.totalAmount}</td>
+                        <td><b>${o.status}</b></td>
+                        <td>${accion}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            html += `<div class="card table-container">
+                <table>
+                    <thead><tr><th>Fecha</th><th>Ítems</th><th>Total</th><th>Estado</th><th>Acción</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<p>No se pudieron cargar los pedidos.</p>';
+        }
+    },
+
+    tomarPedido: async (id) => {
+        try {
+            await api(`/orders/${id}/tomar`, { method: 'PATCH' });
+            showToast('Pedido tomado');
+            app.renderDespacho();
+        } catch (e) { showToast(e.message, 'error'); }
+    },
+
+    despacharPedido: async (id) => {
+        try {
+            await api(`/orders/${id}/despachar`, { method: 'PATCH' });
+            showToast('Pedido despachado');
+            app.renderDespacho();
+        } catch (e) { showToast(e.message, 'error'); }
     }
 };
 
-// Iniciar aplicación
-document.addEventListener('DOMContentLoaded', () => {
-    app.altoViewport();
+/* =========================================
+   INICIO
+========================================= */
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const cfg = await api('/config');
+        setTema(cfg.tema);
+    } catch {
+        setTema(localStorage.getItem('sb-palette') || 'violeta');
+    }
     app.init();
-
 });

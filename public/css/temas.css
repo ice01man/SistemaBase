@@ -1,0 +1,64 @@
+/* =========================================================
+   temas.css  —  Selector de paleta para SistemaBase
+   Cargar DESPUÉS de newstyle.css:
+     <link rel="stylesheet" href="./css/newstyle.css">
+     <link rel="stylesheet" href="./css/temas.css">
+   Se activa poniendo el atributo en la etiqueta <html>:
+     <html data-palette="violeta">   (violeta | trueno | bosque)
+   Sin atributo, queda tu :root actual = idéntico a hoy.
+   Cada bloque solo redefine COLORES; tus clases no se tocan.
+   ========================================================= */
+
+/* ---- VIOLETA · tu look actual (marca) ---- */
+:root[data-palette="violeta"]{
+  --primary:#6366f1;
+  --primary-hover:#4f46e5;
+  --bg-body:#f8fafc;
+  --bg-body-secondary:#cabbff;
+  --secondary:#e0c2fd;
+  --secondary-hover:#c084fc;
+  --primary-glow:rgba(99,102,241,.6);
+  --accent:#06b6d4;
+  --btn-color:#f97316;
+  --btn-color-hover:#ea580c;
+  --bg-sidebar:#4C1D95;
+  --glass-bg:rgba(67,50,99,.574);
+  --glass-gradient:linear-gradient(135deg, rgba(30,20,50,.75), rgba(206,173,255,.75));
+  --glass-bg-hover:rgba(45,25,75,.9);
+}
+
+/* ---- TRUENO · cian + ámbar ---- */
+:root[data-palette="trueno"]{
+  --primary:#0891b2;
+  --primary-hover:#0e7490;
+  --bg-body:#f8fafc;
+  --bg-body-secondary:#c2f0f9;
+  --secondary:#22d3ee;
+  --secondary-hover:#06b6d4;
+  --primary-glow:rgba(8,145,178,.6);
+  --accent:#f59e0b;
+  --btn-color:#f59e0b;
+  --btn-color-hover:#d97706;
+  --bg-sidebar:#083344;
+  --glass-bg:rgba(8,51,68,.62);
+  --glass-gradient:linear-gradient(135deg, rgba(6,42,54,.80), rgba(34,211,238,.30));
+  --glass-bg-hover:rgba(12,74,110,.9);
+}
+
+/* ---- BOSQUE · verde + azul ---- */
+:root[data-palette="bosque"]{
+  --primary:#15803d;
+  --primary-hover:#166534;
+  --bg-body:#f8fafc  ;
+  --bg-body-secondary:#ecfad1;
+  --secondary:#22c55e;
+  --secondary-hover:#16a34a;
+  --primary-glow:rgba(21,128,61,.6);
+  --accent:#3b82f6;
+  --btn-color:#f97316;
+  --btn-color-hover:#ea580c;
+  --bg-sidebar:#052e16;
+  --glass-bg:rgba(5,46,22,.62);
+  --glass-gradient:linear-gradient(135deg, rgba(4,38,18,.80), rgba(34,197,94,.28));
+  --glass-bg-hover:rgba(20,83,45,.9);
+}
