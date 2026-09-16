@@ -203,7 +203,7 @@ main {
   position: relative;
   overflow: hidden;
   border-radius: 0px 0px 20px 20px;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
   border: 1px solid var(--glass-border);
   background:var(--glass-gradient);  
 }
@@ -233,14 +233,6 @@ main {
 }
 
 /* Contenedor principal que alinea las tarjetas horizontalmente */
-.cards-banner-container {
-  display: flex; /* Activa la alineación horizontal */
-  gap: 1.5rem; /* Espacio entre tarjetas */
-  justify-content: center;
-  align-items: stretch; /* Mantiene la altura uniforme */
-  min-height: 480px; /* Altura mínima para asegurar espacio */
-  margin-top: 1rem;
-}
 
 /* Base de la Tarjeta Expandible */
 .card-expandable {
@@ -578,7 +570,6 @@ footer {
 .hero-cta{display:flex;flex-wrap:wrap;gap:.9rem}
 
 /* ---------- SECCIÓN MENÚ ---------- */
-.menu-wrap{margin:2.5rem 0}
 .menu-eyebrow{font-weight:700;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--primary)}
 .menu-wrap h2{font-size:clamp(1.4rem,4vw,1.9rem);font-weight:700;color:var(--text-main);letter-spacing:-.02em;margin:.2rem 0 1.3rem;background:none}
 
@@ -602,7 +593,7 @@ footer {
 .chip-diet.active{background:var(--text-main);color:#fff;border-color:transparent}
 
 /* ---------- GRID + FOOD CARDS ---------- */
-.cards-banner-container{display:grid;grid-template-columns:1fr;gap:1.8rem}
+.cards-banner-container{display:grid;grid-template-columns:1fr;gap:1.8rem; max-width: 1400px;}
 @media(min-width:640px){.cards-banner-container{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:1000px){.cards-banner-container{grid-template-columns:repeat(3,1fr)}}
 
@@ -616,7 +607,7 @@ footer {
 .fc-cat{position:absolute;top:.8rem;left:.8rem;z-index:2;display:inline-flex;align-items:center;gap:.35rem;
   background:var(--gold-050);color:var(--tertiary,#924628);font-weight:700;font-size:.72rem;
   padding:.32rem .7rem;border-radius:999px;box-shadow:var(--card-shadow)}
-.fc-cat.saludable{background:rgba(13,148,136,.15);color:var(--primary)}
+.fc-cat.saludable{color:var(--primary)}
 .fc-meta{position:absolute;bottom:.8rem;left:.8rem;right:.8rem;z-index:2;display:flex;align-items:center;justify-content:space-between}
 .fc-rate{display:inline-flex;align-items:center;gap:.3rem;background:rgba(15,23,42,.6);backdrop-filter:blur(6px);
   color:#fff;font-weight:700;font-size:.8rem;padding:.28rem .6rem;border-radius:8px}

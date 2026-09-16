@@ -79,10 +79,7 @@ const publicViews = {
             <span class="hero-badge"><span class="pt"></span> Servicio Activo • Semana 14</span>
             <h1>Bienvenido a <span class="accent">Nuestro Sistema</span></h1>
             <p class="lead">Plataforma de alta cocina corporativa y gestión de almuerzos ejecutivos. Elegí tu propuesta semanal, mirá los macros de cada plato y programá tu almuerzo en segundos.</p>
-            <div class="hero-cta">
-                <a href="#menu" class="btn btn-primary"><span class="material-symbols-outlined">restaurant_menu</span> Ver Menú del Día</a>
-               
-            </div>
+            
         </section>
 
         <section class="menu-wrap" id="menu">
