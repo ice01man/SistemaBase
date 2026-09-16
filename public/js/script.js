@@ -4,7 +4,7 @@
 const API_URL = '/api';
 
 // emoji por categoría para las cards del menú público
-const EMOJI_CAT = { 'Gourmet': '✨', 'Del Día': '🍲', 'Vegano': '🌱', 'Sandwich': '🥪' };
+const EMOJI_CAT = { 'Gourmet': '✨', 'Del Dia': '🍲', 'Vegano': '🌱', 'Sandwich': '🥪' };
 
 /* =========================================
    ESTADO
@@ -98,7 +98,7 @@ const publicViews = {
                 <span class="lbl">Filtro:</span>
                 <button class="chip-diet active" onclick="filtrarCat('todos', this)">Todos</button>
                 <button class="chip-diet" onclick="filtrarCat('Gourmet', this)">Gourmet</button>
-                <button class="chip-diet" onclick="filtrarCat('Del Día', this)">Del Día</button>
+                <button class="chip-diet" onclick="filtrarCat('Del Dia', this)">Del Día</button>
                 <button class="chip-diet" onclick="filtrarCat('Vegano', this)">Vegano</button>
                 <button class="chip-diet" onclick="filtrarCat('Sandwich', this)">Sandwich</button>
             </div>
@@ -191,6 +191,8 @@ function filtrarCat(cat, el) {
     document.querySelectorAll('.chip-diet').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     state.catActiva = cat;
+
+    console.log('Filtrando por categoría:', cat);
     app.renderMenuDia(state.diaActivo);
 }
 
@@ -335,13 +337,24 @@ const app = {
 
     renderMenuDia: (dia) => {
         const cont = document.getElementById('menu-container');
+        const menuwrap = document.querySelector('.menu-wrap');
         if (!cont) return;
 
         const catSaludable = ['Vegano', 'Vegetariano', 'Ligero'];
-
+        
         let platos = state.products.filter(p => p.day === dia);
         if (state.catActiva && state.catActiva !== 'todos') {
+            console.log('Filtrando por categoría:', state.catActiva);
+            cont.style.display = 'block';
+            cont.style.width = '35%';
+            menuwrap.style.width = '60%';
+            
             platos = platos.filter(p => p.category === state.catActiva);
+        }
+        if (state.catActiva === 'todos') {
+            cont.style.display = 'grid';
+            cont.style.width ='100%';
+            
         }
 
         if (!platos.length) {
