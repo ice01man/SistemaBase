@@ -19,6 +19,7 @@ const state = {
     orders: [],
     cart: JSON.parse(localStorage.getItem('cart')) || [],
     diaActivo: 'lunes',
+    catActiva: 'todos',
     editingId: null,
     editType: null
 };
@@ -75,22 +76,36 @@ function saveCart() {
 const publicViews = {
     home: `
         <section class="hero">
-            <h1>Bienvenido a Nuestro Sistema</h1>
-            <p>Una solución integral para gestionar tus necesidades. Eficiencia, seguridad y escalabilidad en un solo lugar.</p>
+            <span class="hero-badge"><span class="pt"></span> Servicio Activo • Semana 14</span>
+            <h1>Bienvenido a <span class="accent">Nuestro Sistema</span></h1>
+            <p class="lead">Plataforma de alta cocina corporativa y gestión de almuerzos ejecutivos. Elegí tu propuesta semanal, mirá los macros de cada plato y programá tu almuerzo en segundos.</p>
+            <div class="hero-cta">
+                <a href="#menu" class="btn btn-primary"><span class="material-symbols-outlined">restaurant_menu</span> Ver Menú del Día</a>
+               
+            </div>
         </section>
-        <section class="banner-menu">
+
+        <section class="menu-wrap" id="menu">
+            <span class="menu-eyebrow">Cronograma de Servicio</span>
+            <h2 id="titulo-dia">Menú del Lunes</h2>
+
             <div class="dias-selector">
-                <button class="btn-dia active" onclick="cambiarDia('lunes', this)">📅 Lunes</button>
-                <button class="btn-dia" onclick="cambiarDia('martes', this)">📅 Martes</button>
-                <button class="btn-dia" onclick="cambiarDia('miercoles', this)">📅 Miércoles</button>
-                <button class="btn-dia" onclick="cambiarDia('jueves', this)">📅 Jueves</button>
-                <button class="btn-dia" onclick="cambiarDia('viernes', this)">📅 Viernes</button>
+                <button class="btn-dia active" onclick="cambiarDia('lunes', this)"><span class="material-symbols-outlined">calendar_today</span> Lunes</button>
+                <button class="btn-dia" onclick="cambiarDia('martes', this)"><span class="material-symbols-outlined">calendar_today</span> Martes</button>
+                <button class="btn-dia" onclick="cambiarDia('miercoles', this)"><span class="material-symbols-outlined">calendar_today</span> Miércoles</button>
+                <button class="btn-dia" onclick="cambiarDia('jueves', this)"><span class="material-symbols-outlined">calendar_today</span> Jueves</button>
+                <button class="btn-dia" onclick="cambiarDia('viernes', this)"><span class="material-symbols-outlined">calendar_today</span> Viernes</button>
             </div>
-            <div class="modal-titulo">
-                <h2 class="banner-titulo" id="titulo-dia">Menú del Lunes</h2>
-                <p class="banner-subtitulo">Pasa el cursor sobre cada opción para ver los ingredientes</p>
+
+            <div class="diet-filters">
+                <span class="lbl">Filtro:</span>
+                <button class="chip-diet active" onclick="filtrarCat('todos', this)">Todos</button>
+                <button class="chip-diet" onclick="filtrarCat('Gourmet', this)">Gourmet</button>
+                <button class="chip-diet" onclick="filtrarCat('Del Día', this)">Del Día</button>
+                <button class="chip-diet" onclick="filtrarCat('Vegano', this)">Vegano</button>
+                <button class="chip-diet" onclick="filtrarCat('Sandwich', this)">Sandwich</button>
             </div>
-            <!-- Las cards se generan dinámicamente desde el backend -->
+
             <div class="cards-banner-container" id="menu-container"></div>
         </section>
     `,
@@ -173,6 +188,13 @@ function cambiarDia(dia, elemento) {
     state.diaActivo = dia;
     document.getElementById('titulo-dia').textContent = `Menú del ${dia.charAt(0).toUpperCase() + dia.slice(1)}`;
     app.renderMenuDia(dia);
+}
+
+function filtrarCat(cat, el) {
+    document.querySelectorAll('.chip-diet').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    state.catActiva = cat;
+    app.renderMenuDia(state.diaActivo);
 }
 
 /* Tema del sitio (paleta) */
@@ -318,31 +340,66 @@ const app = {
         const cont = document.getElementById('menu-container');
         if (!cont) return;
 
-        const delDia = state.products.filter(p => p.day === dia);
-        if (!delDia.length) {
-            cont.innerHTML = `<p>No hay platos cargados para ${dia}.</p>`;
+        const catSaludable = ['Vegano', 'Vegetariano', 'Ligero'];
+
+        let platos = state.products.filter(p => p.day === dia);
+        if (state.catActiva && state.catActiva !== 'todos') {
+            platos = platos.filter(p => p.category === state.catActiva);
+        }
+
+        if (!platos.length) {
+            cont.innerHTML = `<p style="color:var(--text-muted)">No hay platos para mostrar en ${dia}.</p>`;
             return;
         }
 
-        cont.innerHTML = delDia.map(p => {
-            const emoji = EMOJI_CAT[p.category] || '🍽️';
+        cont.innerHTML = platos.map(p => {
+            const esSaludable = catSaludable.includes(p.category);
+            const rating = (p.rating || 4.8).toFixed(1);
+            const reviews = p.reviews || Math.floor(60 + Math.random() * 90);
+            const kcal = p.calorias ? `${p.calorias} kcal` : '';
+            const prot = p.proteina ? `${p.proteina}g Proteína` : '';
             const ing = (p.ingredients || []).map(i => `<li>${i}</li>`).join('');
+            const img = p.image || 'https://placehold.co/600x400/0D9488/FFF?text=' + encodeURIComponent(p.name || 'Plato');
+
             return `
-                <div class="card card-expandable">
-                    <div class="card-header-compact">
-                        <h3>${emoji} ${p.category}</h3>
-                        <img src="${p.image}" alt="${p.category}" class="thumb-img">
-                    </div>
-                    <div class="card-content">
-                        <img src="${p.image}" alt="${p.category}" class="featured-img">
-                        <h4>${p.name}</h4>
-                        <p class="descripcion">${p.description || ''}</p>
-                        <div class="ingredientes-seccion">
-                            <h5>Ingredientes:</h5>
-                            <ul>${ing}</ul>
+                <article class="food-card">
+                    <div class="fc-photo">
+                        <img src="${img}" alt="${p.name}">
+                        <span class="fc-cat ${esSaludable ? 'saludable' : ''}">
+                            <span class="material-symbols-outlined" style="font-size:14px">${esSaludable ? 'eco' : 'local_fire_department'}</span>
+                            ${p.category}
+                        </span>
+                        <div class="fc-meta">
+                            <span class="fc-rate"><span class="star material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 1">star</span> ${rating} <span class="count">(${reviews})</span></span>
+                            <span class="fc-incl">Almuerzo Incluido</span>
                         </div>
                     </div>
-                </div>
+                    <div class="fc-body">
+                        <div style="display:flex;flex-direction:column;gap:.4rem">
+                            <h3>${p.name}</h3>
+                            <p class="fc-desc">${p.description || ''}</p>
+                        </div>
+                        <div class="fc-tags">
+                            ${kcal ? `<span class="fc-tag"><span class="material-symbols-outlined">bolt</span>${kcal}</span>` : ''}
+                            ${prot ? `<span class="fc-tag"><span class="material-symbols-outlined">fitness_center</span>${prot}</span>` : ''}
+                            ${esSaludable ? '<span class="fc-tag seal-veg">100% Vegano</span>' : '<span class="fc-tag seal">Sin Gluten</span>'}
+                        </div>
+                        ${ing ? `
+                        <details class="fc-ingr">
+                            <summary>Ver ingredientes <span class="material-symbols-outlined chev">expand_more</span></summary>
+                            <ul>${ing}</ul>
+                        </details>` : ''}
+                        <div class="fc-foot">
+                            <div class="fc-plan">
+                                <span class="k">Precio</span>
+                                <span class="v">$${p.price}</span>
+                            </div>
+                            <button class="btn-select" onclick="app.addToCart('${uid(p)}')">
+                                <span class="material-symbols-outlined">add</span> Seleccionar
+                            </button>
+                        </div>
+                    </div>
+                </article>
             `;
         }).join('');
     },
@@ -497,6 +554,7 @@ const app = {
         const rows = state.products.map(p => `
             <tr>
                 <td>${uid(p)}</td>
+                <td><img src="${p.image}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                 <td>${p.name}</td>
                 <td>${p.day || '-'}</td>
                 <td>${p.category || '-'}</td>
@@ -516,7 +574,7 @@ const app = {
             <div class="card table-container">
                 <table>
                     <thead>
-                        <tr><th>ID</th><th>Nombre</th><th>Día</th><th>Categoría</th><th>Precio</th><th>Acciones</th></tr>
+                        <tr><th>ID</th><th>Imagen</th><th>Nombre</th><th>Día</th><th>Categoría</th><th>Precio</th><th>Acciones</th></tr>
                     </thead>
                     <tbody>${rows}</tbody>
                 </table>
@@ -777,8 +835,9 @@ const app = {
             { id:'violeta', nombre:'Violeta', desc:'Look actual de la marca' , color: '#7c3aed' },
             { id:'trueno',  nombre:'Trueno',  desc:'Cian + ámbar' , color: '#06b6d4' },
             { id:'bosque',  nombre:'Bosque',  desc:'Verde + azul' , color: '#10b981' },
+            { id:'teal',    nombre:'Teal (actual)', desc:'Diseño base del sitio' , color: '#0D9488' },
         ];
-        const actual = document.documentElement.dataset.palette || 'violeta';
+        const actual = document.documentElement.dataset.palette || 'teal';
         document.getElementById('admin-content').innerHTML = `
             <div class="modal-titulo">
                 <h2 >Apariencia del sitio</h2>
