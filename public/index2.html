@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SistemaBase · Menú semanal</title>
+<link rel="stylesheet" href="css/brie.css" />
+</head>
+<body>
+<div id="navbar"></div>
+
+<main>
+  <section style="background:linear-gradient(to bottom, var(--brie-lavender-light), var(--brie-cream)); padding:3rem 0;">
+    <div class="container" style="display:flex; flex-direction:column; align-items:center; gap:2rem; text-align:center;">
+      <div>
+        <h1 style="font-size:2.5rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">
+          Tu menú semanal, <span style="color:var(--brie-orange);">sin complicarte</span>.
+        </h1>
+        <p style="margin-top:1rem; font-size:1.125rem; color:var(--brie-violet-dark); max-width:40rem; margin-left:auto; margin-right:auto;">
+          Elegí entre platos Gourmet, Veganos, Sándwiches y el menú Del Día, organizados por día de la semana.
+          Pedilo online y seguí el estado de tu pedido en tiempo real.
+        </p>
+        <div style="margin-top:2rem; display:flex; flex-wrap:wrap; justify-content:center; gap:0.75rem;">
+          <a id="cta-pedir" href="registro.html" class="btn-orange" style="padding:0.75rem 1.5rem; font-size:1rem;">Hacer un pedido</a>
+          <a href="menu.html" class="btn-outline" style="padding:0.75rem 1.5rem; font-size:1rem;">Ver el menú</a>
+        </div>
+      </div>
+      <div class="font-brand" style="font-size:4rem; color:var(--brie-violet);">SistemaBase</div>
+    </div>
+  </section>
+  <section class="container" style="padding:1rem 1rem;">
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin: 0%;">¿Cómo funciona?</h2>
+    <div class="grid-3" style="margin-top:0.5rem;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:1.75rem;">📅</div>
+        <h3 style=" margin: 0">Elegí el día</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Mirá el menú de cada día de la semana: Gourmet, Vegano, Sándwich y Del Día.</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:1.75rem;">🛒</div>
+        <h3 style=" margin: 0">Armá tu pedido</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Sumá los platos que quieras al carrito y confirmá tu pedido en un par de clics.</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:1.75rem;">📦</div>
+        <h3 style=" margin: 0">Seguilo en tiempo real</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Desde "Mis pedidos" ves cuándo lo toman en cocina y cuándo se despacha.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container" style="padding:1rem 1rem 0;">
+    <hr>
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep);">Menú semanal</h2>
+    <p style="text-align:center; opacity:0.7; margin-top:0.25rem;">Elegí un día y filtrá por categoría.</p>
+    <div id="dias" style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin-top:1.5rem;"></div>
+    <div id="filtros" style="display:flex; justify-content:center; margin-top:1rem;"></div>
+    <div id="menu" class="cards-grid" style="margin-top:1.5rem;"></div>
+  </section>
+  <section class="container" style="padding:1rem 1rem 0;">
+    <hr>
+    <h2>Contactonos</h2>
+    <div class="card" style="text-align:center;">
+      <input type="text">
+    </div>
+
+  </section>
+   <section class="container" style="padding:1rem 1rem 0;">
+    <hr>
+    <h2>Donde estamos ?</h2>
+    <div class="card" style="text-align:center;">
+      
+    </div>
+
+  </section>
+
+  
+</main>
+
+<footer class="footer-brie">
+  <span class="font-brand" style="font-size:1.875rem; color:var(--brie-violet);">SistemaBase</span>
+  <p style="font-weight:700;">Gestión de menús y pedidos</p>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/foodcard.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+  const u = getUsuario();
+  if (u) document.getElementById("cta-pedir").href = destinoPorRol(u.role);
+
+  // Menú de la home: mismo comportamiento que menu.html (día + categoría),
+  // pero embebido acá para que se vea sin navegar a otra página.
+  let diaActual = DIAS.includes(diaDeHoy()) ? diaDeHoy() : "lunes";
+  let categoriaActual = "Todos";
+  let productosDelDia = [];
+
+  async function cargarDiaHome(dia) {
+    diaActual = dia ?? diaActual;
+    categoriaActual = "Todos";
+    document.getElementById("dias").innerHTML = DIAS.map(
+      (d) => `<button class="chip ${d === diaActual ? "activo" : ""}" onclick="cargarDiaHome('${d}')">${DIA_LABEL[d]}</button>`
+    ).join("");
+    productosDelDia = await apiGet(`/products/by-day?day=${diaActual}`);
+    renderMenuHome();
+  }
+
+  function filtrarCategoriaHome(cat) {
+    categoriaActual = cat;
+    renderMenuHome();
+  }
+
+  function renderMenuHome() {
+    document.getElementById("filtros").innerHTML = productosDelDia.length
+      ? renderFiltrosCategoria(productosDelDia, categoriaActual, "filtrarCategoriaHome")
+      : "";
+
+    const cont = document.getElementById("menu");
+    if (productosDelDia.length === 0) {
+      cont.innerHTML = `<div class="card" style="grid-column:1/-1; text-align:center; opacity:0.7;">Todavía no hay platos cargados para el ${DIA_LABEL[diaActual].toLowerCase()}.</div>`;
+      return;
+    }
+    const visibles = categoriaActual === "Todos" ? productosDelDia : productosDelDia.filter((p) => p.category === categoriaActual);
+    const destino = u ? destinoPorRol(u.role) : "registro.html";
+    cont.innerHTML = visibles
+      .map((p) => renderFoodCard(p, `<span class="fc-price">${fmtPrecio(p.price)}</span><a href="${destino}" class="btn-orange" style="font-size:0.8rem;">Pedir</a>`))
+      .join("");
+  }
+
+  cargarDiaHome();
+</script>
+</body>
+</html>

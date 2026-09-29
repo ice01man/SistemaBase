@@ -7,7 +7,14 @@ const productSchema = new mongoose.Schema({
     description: { type: String, required: true },
     ingredients: [],
     image: { type: String, required: true },
-    price: { type: Number, required: true }
+    price: { type: Number, required: true },
+    // Campos para la tarjeta de menú (badges/rating): cargados por el admin, no por reseñas de clientes.
+    tags: { type: [String], default: [] },          // ej: "Sin Gluten", "100% Vegano"
+    destacado: { type: String, default: null },      // ej: "Almuerzo Incluido" (badge sobre la foto)
+    rating: {
+        promedio: { type: Number, default: 0, min: 0, max: 5 },
+        cantidad: { type: Number, default: 0, min: 0 },
+    },
 }, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);

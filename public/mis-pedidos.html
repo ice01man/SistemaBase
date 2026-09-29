@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mis pedidos · SistemaBase</title>
+<link rel="stylesheet" href="css/brie.css" />
+</head>
+<body>
+<div id="navbar"></div>
+<main class="container-md" style="padding:2.5rem 1rem;">
+  <h1 style="font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep);">Mis pedidos</h1>
+  <div id="aviso-nuevo"></div>
+  <div id="lista" style="margin-top:1.5rem; display:flex; flex-direction:column; gap:1.25rem;"></div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+  async function init() {
+    const usuario = requireRol("cliente", "admin");
+    if (!usuario) return;
+
+    if (new URLSearchParams(location.search).get("nuevo")) {
+      document.getElementById("aviso-nuevo").innerHTML = `<div class="msg-ok" style="margin-top:1rem;">✅ ¡Pedido recibido! Acá vas a ver el estado.</div>`;
+    }
+    await cargar();
+  }
+
+  async function cargar() {
+    const pedidos = await apiGet("/orders/mis-pedidos");
+    const cont = document.getElementById("lista");
+    if (pedidos.length === 0) {
+      cont.innerHTML = `<div class="card" style="text-align:center; opacity:0.7;">Todavía no hiciste pedidos.</div>`;
+      return;
+    }
+    cont.innerHTML = pedidos.map(renderPedido).join("");
+  }
+
+  function renderPedido(p) {
+    return `
+    <div class="card">
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.5rem; align-items:center;">
+        <div>
+          <span style="font-size:0.875rem; font-weight:800; color:var(--brie-violet);">Pedido #${p._id.slice(-6)}</span>
+          <h3 style="margin:0; font-size:1rem; font-weight:800; color:var(--brie-violet-deep);">${fmtFechaHora(p.createdAt)}</h3>
+        </div>
+        <span class="badge" style="${ESTADO_COLOR[p.estado]}">${ESTADO_LABEL[p.estado]}</span>
+      </div>
+
+      <div style="border-top:1px solid var(--brie-lavender-light); margin-top:0.75rem; padding-top:0.75rem; font-size:0.875rem; display:flex; flex-direction:column; gap:0.25rem;">
+        ${p.items.map((i) => `
+          <div style="display:flex; justify-content:space-between;">
+            <span>${i.qty} × ${esc(i.name)}</span>
+            <span style="font-weight:800;">${fmtPrecio(i.qty * i.price)}</span>
+          </div>`).join("")}
+        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--brie-lavender-light); padding-top:0.5rem; font-size:1rem; font-weight:800; color:var(--brie-violet-deep);">
+          <span>Total</span><span>${fmtPrecio(p.totalAmount)}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  init();
+</script>
+</body>
+</html>

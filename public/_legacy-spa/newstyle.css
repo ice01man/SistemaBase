@@ -77,8 +77,8 @@ h2 {
     color: var(--text-main); 
     background: var(--glass-gradient); /* Corregido: background-color no acepta gradientes */
     border-radius: 10px;
-    margin: 0;
-   
+    padding: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 button { 
@@ -186,12 +186,6 @@ button:hover {
     border-radius: var(--radius);
     padding: 2rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.card h3{
-    color:var(--brie-violet-dark); 
-    font-weight:800;
-    margin: 0%;
 }
 
 .form-group { 
@@ -545,9 +539,7 @@ main {
     letter-spacing: -.01em;
     transition: color .2s;
 }
-.food-card:hover .fc-body h3 { 
-    color: var(--primary); 
-}
+.food-card:hover .fc-body h3 { color: var(--primary); }
 .fc-desc {
     color: #64748B;
     font-size: .88rem;

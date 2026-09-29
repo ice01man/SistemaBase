@@ -6,7 +6,7 @@ import * as memoria from '../config/memoria.js';
 export const getUsers = async (req, res) => {
   try {
     if (getModo() !== 'mongo') return res.json(memoria.getUsers());
-    const users = await User.find().select('-password');
+    const users = await User.find().select('-passwordHash');
     res.json(users);
   } catch (e) { res.status(500).json({ message: e.message }); }
 };
@@ -23,14 +23,14 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { nombre, email, rol, password } = req.body;
+    const { nombre, email, rol, password, direccion } = req.body;
     if (getModo() !== 'mongo') {
-      const upd = memoria.updateUser(req.params.id, { nombre, email, rol, ...(password ? { password } : {}) });
+      const upd = memoria.updateUser(req.params.id, { nombre, email, rol, direccion, ...(password ? { password } : {}) });
       return upd ? res.json(upd) : res.status(404).json({ message: 'No encontrado' });
     }
-    const data = { nombre, email, rol  };
-    if (password) data.password = await bcrypt.hash(password, 10);
-    const upd = await User.findByIdAndUpdate(req.params.id, data, { new: true }).select('-password');
+    const data = { nombre, email, rol, direccion };
+    if (password) data.passwordHash = await bcrypt.hash(password, 10);
+    const upd = await User.findByIdAndUpdate(req.params.id, data, { new: true }).select('-passwordHash');
     if (!upd) return res.status(404).json({ message: 'No encontrado' });
     res.json(upd);
   } catch (e) { res.status(500).json({ message: e.message }); }

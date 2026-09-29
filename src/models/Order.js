@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
-    user: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
     items: [{
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
@@ -13,11 +13,13 @@ const orderSchema = new mongoose.Schema({
         qty: Number
     }],
     totalAmount: { type: Number, required: true },
-    status: { 
-        type: String, 
-        enum: ['Pendiente', 'En Proceso', 'Entregado'], 
-        default: 'Pendiente' 
-    }
+    // Flujo real que usa orderController.js: confirmado (cliente pide) → tomado (empleado lo toma) → despachado
+    estado: {
+        type: String,
+        enum: ['confirmado', 'tomado', 'despachado'],
+        default: 'confirmado'
+    },
+    tomadoPor: { type: String, default: null }
 }, { timestamps: true });
 
 export default mongoose.model('Order', orderSchema);

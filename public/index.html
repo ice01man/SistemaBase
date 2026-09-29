@@ -1,135 +1,277 @@
 <!DOCTYPE html>
-<html lang="es" data-palette="teal">
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Gestión</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<!-- Asegúrate de tener este archivo CSS -->
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
-<!--<link rel="stylesheet" href="./css/style.css"> -->
-<link rel="stylesheet" href="./css/newstyle.css">
-<link rel="stylesheet" href="./css/temas.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SistemaBase · Menú semanal</title>
+<link rel="stylesheet" href="css/brie.css" />
+<base target="_blank">
 </head>
 <body>
+<div id="navbar"></div>
 
-<!-- Contenedor de Notificaciones -->
-<div id="toast-container"></div>
-
-<!-- =========================================
-VISTAS PÚBLICAS
-========================================= -->
-<div id="public-layout">
-    <header>
-        <div class="brand">Sistema Base<span style="color:var(--text-main)">.com</span></div>
-        <nav>
-            <ul>
-                <li><a href="#" onclick="navigate('home')">Inicio</a></li>
-                <li><a href="#" onclick="navigate('about')">Quiénes Somos</a></li>
-                <li><a href="#" onclick="navigate('contact')">Contáctenos</a></li>
-                <li><a href="#" onclick="navigate('login')" class="btn btn-primary" style="color: white; padding: 0.4rem 1rem;">Acceder</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main id="main-content">
-        <!-- Se inyectará el contenido dinámicamente aquí -->
-    </main>
-
-   <footer id="main-footer" class="site-footer">
-    <div class="sf-wrap">
-        <div class="sf-grid">
-            <div class="sf-brand">
-                <div class="sf-logo">
-                    <span class="sf-iso"><span class="material-symbols-outlined">restaurant</span></span>
-                    <span class="sf-name">SistemaBase</span>
-                </div>
-                <p class="sf-desc">Plataforma corporativa de gestión de menús, pedidos diarios y servicio de catering gastronómico premium para empresas y organizaciones.</p>
-                <span class="sf-badge"><span class="material-symbols-outlined">verified</span> Servicio Gastronómico Corporativo</span>
-            </div>
-
-            <div class="sf-col">
-                <span class="sf-col-title">Catering</span>
-                <a onclick="navigate('home')">Menú de la Semana</a>
-                <a href="#">Planes Corporativos</a>
-                <a href="#">Opciones Saludables</a>
-                <a href="#">Eventos &amp; Coffee Breaks</a>
-            </div>
-
-            <div class="sf-col">
-                <span class="sf-col-title">Institucional</span>
-                <a onclick="navigate('about')">Quiénes Somos</a>
-                <a onclick="navigate('contact')">Contacto &amp; Sucursales</a>
-                <a href="#">Soporte y Mesa de Ayuda</a>
-                <a onclick="navigate('login')">Portal Operativo</a>
-            </div>
-
-            <div class="sf-col">
-                <span class="sf-col-title">Legal &amp; Privacidad</span>
-                <a href="#">Términos de Servicio</a>
-                <a href="#">Política de Privacidad</a>
-                <a href="#">Seguridad Alimentaria</a>
-                <a href="#">Aviso Legal</a>
-            </div>
+<main>
+  <!-- ============ 1. HERO ============ -->
+  <section style="background:linear-gradient(to bottom, var(--brie-lavender-light), var(--brie-cream)); padding:3rem 0;">
+    <div class="container" style="display:flex; flex-direction:column; align-items:center; gap:2rem; text-align:center;">
+      <div>
+        <h1 style="font-size:2.5rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">
+          Tu menú semanal, <span style="color:var(--brie-orange);">en un solo lugar</span>.
+        </h1>
+        <p style="margin-top:1rem; font-size:1.125rem; color:var(--brie-violet-dark); max-width:40rem; margin-left:auto; margin-right:auto;">
+          Descubrí todo lo que podemos ofrecerte: platos Gourmet, Veganos, Sándwiches y el menú Del Día,
+          organizados por día de la semana. Pedí online y seguí tu pedido en tiempo real.
+        </p>
+        <div style="margin-top:2rem; display:flex; flex-wrap:wrap; justify-content:center; gap:0.75rem;">
+          <a id="cta-pedir" href="registro.html" class="btn-orange" style="padding:0.75rem 1.5rem; font-size:1rem;">Hacer un pedido</a>
+          <a href="menu.html" class="btn-outline" style="padding:0.75rem 1.5rem; font-size:1rem;">Ver el menú</a>
         </div>
-
-        <div class="sf-bottom">
-            <p class="sf-copy">© 2026 SistemaBase — Paulo Reta. Todos los derechos reservados.</p>
-            <div class="sf-contact">
-                <a href="#"><span class="material-symbols-outlined">help</span> Centro de Asistencia</a>
-                <a href="mailto:soporte@sistemabase.com"><span class="material-symbols-outlined">mail</span> soporte@sistemabase.com</a>
-            </div>
-        </div>
+      </div>
+      <div class="font-brand" style="font-size:4rem; color:var(--brie-violet);">SistemaBase</div>
     </div>
+  </section>
+
+  <!-- ============ 2. DESCUBRÍ NUESTRAS OPCIONES (cards estilo Car One: Comprar / Vender / Asegurar) ============ -->
+  <section class="container" style="padding:2rem 1rem;">
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Descubrí todo lo que podemos ofrecerte</h2>
+    <p style="text-align:center; opacity:0.7; margin-top:0.5rem; max-width:40rem; margin-left:auto; margin-right:auto;">
+      Contamos con una amplia gama de platos que cubren todos los gustos. Elegí tu línea favorita.
+    </p>
+    <div class="cards-grid" style="margin-top:1.5rem;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">🍽️</div>
+        <h3 style="margin:0.5rem 0 0;">Gourmet</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Platos elaborados con ingredientes seleccionados, para los paladares más exigentes.</p>
+        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">🌱</div>
+        <h3 style="margin:0.5rem 0 0;">Veganos</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Opciones 100% vegetales, equilibradas y llenas de sabor, sin sacrificar nada.</p>
+        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">🥪</div>
+        <h3 style="margin:0.5rem 0 0;">Sándwiches</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Clásicos y especiales, preparados al momento con pan fresco y rellenos generosos.</p>
+        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">⭐</div>
+        <h3 style="margin:0.5rem 0 0;">Del Día</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">La propuesta del chef que cambia cada día: casera, rendidora y al mejor precio.</p>
+        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. CÓMO FUNCIONA (pasos numerados estilo Car One: 01 / 02 / 03) ============ -->
+  <section class="container" style="padding:2rem 1rem;">
+    <hr>
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Tres pasos simples para pedir tu menú</h2>
+    <p style="text-align:center; opacity:0.7; margin-top:0.5rem;">Comé bien toda la semana, sin complicaciones.</p>
+    <div class="grid-3" style="margin-top:1.5rem;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--brie-orange);">01.</div>
+        <h3 style="margin:0.25rem 0 0;">Elegí el día</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Mirá el menú de cada día de la semana: Gourmet, Vegano, Sándwich y Del Día.</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--brie-orange);">02.</div>
+        <h3 style="margin:0.25rem 0 0;">Armá tu pedido</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Sumá los platos que quieras al carrito y confirmá tu pedido en un par de clics.</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--brie-orange);">03.</div>
+        <h3 style="margin:0.25rem 0 0;">Seguilo en tiempo real</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Desde "Mis pedidos" ves cuándo lo toman en cocina y cuándo se despacha.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. MENÚ SEMANAL (interactivo, sin cambios) ============ -->
+  <section class="container" style="padding:1rem 1rem 0;">
+    <hr>
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep);">Menú semanal</h2>
+    <p style="text-align:center; opacity:0.7; margin-top:0.25rem;">Elegí un día y filtrá por categoría.</p>
+    <div id="dias" style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin-top:1.5rem;"></div>
+    <div id="filtros" style="display:flex; justify-content:center; margin-top:1rem;"></div>
+    <div id="menu" class="cards-grid" style="margin-top:1.5rem;"></div>
+  </section>
+
+  <!-- ============ 5. TESTIMONIOS (estilo Car One) ============ -->
+  <section class="container" style="padding:2rem 1rem;">
+    <hr>
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Conocé las experiencias de quienes nos eligen cada día</h2>
+    <div class="cards-grid-comentarios" style="margin-top:1.5rem;">
+      <div class="card" style="text-align:center;">
+        <p style="font-weight:700; color:var(--brie-violet-deep); margin:0;">"Llegó todo calentito"</p>
+        <p style="font-size:0.875rem; opacity:0.8;">Hice el pedido desde la oficina y llegó antes de la hora del almuerzo. Cero vueltas.</p>
+        <p style="font-size:0.8rem; font-weight:700; opacity:0.6; margin:0;">-Nicolás Peralta</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <p style="font-weight:700; color:var(--brie-violet-deep); margin:0;">"Me resolvió la semana"</p>
+        <p style="font-size:0.875rem; opacity:0.8;">Organizo el menú del lunes y no pienso más en la comida. Los veganos son lo más.</p>
+        <p style="font-size:0.8rem; font-weight:700; opacity:0.6; margin:0;">-Carla Sosa</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <p style="font-weight:700; color:var(--brie-violet-deep); margin:0;">"El seguimiento es genial"</p>
+        <p style="font-size:0.875rem; opacity:0.8;">Vi cuándo lo tomaron en cocina y cuándo salió el reparto. Muy prolijo todo.</p>
+        <p style="font-size:0.8rem; font-weight:700; opacity:0.6; margin:0;">-Ezequiel Romero</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <p style="font-weight:700; color:var(--brie-violet-deep); margin:0;">"Todo claro desde el minuto uno"</p>
+        <p style="font-size:0.875rem; opacity:0.8;">Tenía dudas con las categorías pero el menú por día lo hace súper simple.</p>
+        <p style="font-size:0.8rem; font-weight:700; opacity:0.6; margin:0;">-Valentina Franco</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <p style="font-weight:700; color:var(--brie-violet-deep); margin:0;">"Pedido resuelto en un par de clics"</p>
+        <p style="font-size:0.875rem; opacity:0.8;">Entré, elegí el viernes, agregué dos platos al carrito y listo. Necesitaba algo así.</p>
+        <p style="font-size:0.8rem; font-weight:700; opacity:0.6; margin:0;">-Gonzalo Medina</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <p style="font-weight:700; color:var(--brie-violet-deep); margin:0;">"Proceso ágil y profesional"</p>
+        <p style="font-size:0.875rem; opacity:0.8;">Muchas opciones por día y siempre algo distinto. Muy buen servicio.</p>
+        <p style="font-size:0.8rem; font-weight:700; opacity:0.6; margin:0;">-Lucía Arce</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. PANEL "MI SISTEMABASE" (estilo "Sos el protagonista de tu viaje") ============ -->
+  <section class="container" style="padding:2rem 1rem;">
+    <hr>
+    <div class="card" style="background:var(--brie-violet-deep); color:#fff; text-align:center; padding:2.5rem 1.5rem;">
+      <h2 style="font-size:1.875rem; font-weight:800; margin:0;">Sos el protagonista de tu semana</h2>
+      <p style="opacity:0.85; max-width:36rem; margin:1rem auto 0;">
+        Desde <strong>"Mis pedidos"</strong> vas a manejar todos tus pedidos, repetir tus platos favoritos
+        y seguir el estado de cada entrega en un solo lugar... ¡Que empiece el viaje!
+      </p>
+      <div style="margin-top:1.5rem; display:flex; flex-wrap:wrap; justify-content:center; gap:0.75rem;">
+        <a id="cta-cuenta" href="registro.html" class="btn-orange" style="padding:0.75rem 1.5rem; font-size:1rem;">Crear mi cuenta</a>
+        <a href="menu.html" class="btn-outline" style="padding:0.75rem 1.5rem; font-size:1rem;">Explorar el menú</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7. PREGUNTAS FRECUENTES (estilo Car One) ============ -->
+  <section class="container" style="padding:1rem 1rem 2rem;">
+    <hr>
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Preguntas frecuentes</h2>
+    <div style="max-width:44rem; margin:1.5rem auto 0; display:flex; flex-direction:column; gap:0.75rem;">
+      <details class="card" style="padding:1rem 1.25rem;">
+        <summary style="font-weight:700; color:var(--brie-violet-deep); cursor:pointer;">¿Cómo hago un pedido?</summary>
+        <p style="font-size:0.875rem; opacity:0.8; margin:0.75rem 0 0;">Elegí el día de la semana, seleccioná tus platos, agregalos al carrito y confirmá. Vas a poder seguir el estado en "Mis pedidos".</p>
+      </details>
+      <details class="card" style="padding:1rem 1.25rem;">
+        <summary style="font-weight:700; color:var(--brie-violet-deep); cursor:pointer;">¿Puedo retirar mi pedido o hacen envíos?</summary>
+        <p style="font-size:0.875rem; opacity:0.8; margin:0.75rem 0 0;">Ambas opciones. Al confirmar elegís retiro por nuestro local o entrega a domicilio dentro de la zona de cobertura.</p>
+      </details>
+      <details class="card" style="padding:1rem 1.25rem;">
+        <summary style="font-weight:700; color:var(--brie-violet-deep); cursor:pointer;">¿Cómo sigo mi pedido en tiempo real?</summary>
+        <p style="font-size:0.875rem; opacity:0.8; margin:0.75rem 0 0;">Ingresá a "Mis pedidos" y vas a ver cuándo lo toman en cocina, cuándo está en preparación y cuándo se despacha.</p>
+      </details>
+      <details class="card" style="padding:1rem 1.25rem;">
+        <summary style="font-weight:700; color:var(--brie-violet-deep); cursor:pointer;">¿Qué medios de pago aceptan?</summary>
+        <p style="font-size:0.875rem; opacity:0.8; margin:0.75rem 0 0;">Aceptamos los principales medios de pago online. El detalle completo lo ves al confirmar tu pedido.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 8. SUCURSAL / ¿DÓNDE ESTAMOS? (formato sucursales Car One) ============ -->
+  <section class="container" style="padding:1rem 1rem 2rem;">
+    <hr>
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">¿Dónde estamos?</h2>
+    <div class="card" style="max-width:44rem; margin:1.5rem auto 0; padding:1.5rem;">
+      <h3 style="margin:0; color:var(--brie-violet);">SistemaBase</h3>
+      <p style="margin:0.5rem 0 0; font-weight:700;">Av. Ejemplo 1234, CABA</p>
+      <p style="margin:1rem 0 0; font-size:0.9rem;"><strong>Administración:</strong> Lunes a Viernes de 9 a 18 hs</p>
+      <p style="margin:0.25rem 0 0; font-size:0.9rem;"><strong>Entregas:</strong> Lunes a Viernes de 11 a 15 hs</p>
+      <p style="margin:0.25rem 0 0; font-size:0.9rem;"><strong>Retiro en local:</strong> Lunes a Viernes de 10 a 20 hs</p>
+      <p style="margin:0.25rem 0 0; font-size:0.9rem;"><strong>Teléfono:</strong> 011 5555-5555</p>
+      <p style="margin:0.25rem 0 0; font-size:0.9rem;"><strong>Mail:</strong> contacto@sistemabase.com.ar</p>
+      <a href="https://wa.me/5491155555555" target="_blank" rel="noopener" class="btn-orange" style="display:inline-block; margin-top:1.25rem; padding:0.6rem 1.25rem; font-size:0.9rem; text-decoration:none;">Contactar por WhatsApp</a>
+    </div>
+  </section>
+</main>
+
+<!-- ============ 9. FOOTER con columnas (estilo Car One) ============ -->
+<footer class="footer-brie" style="padding:2.5rem 1rem;">
+  <div class="container" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:2rem; text-align:left;">
+    <div style="min-width:12rem;">
+      <span class="font-brand" style="font-size:1.875rem; color:var(--brie-violet);">SistemaBase</span>
+      <p style="font-weight:700; margin:0.5rem 0 0;">Gestión de menús y pedidos</p>
+      <p style="font-size:0.8rem; opacity:0.7; margin:0.5rem 0 0;">Tu menú semanal, sin complicarte.</p>
+    </div>
+    <div style="min-width:10rem;">
+      <p style="font-weight:800; margin:0;">Legal</p>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.5rem; color:inherit; text-decoration:none;">Términos y condiciones de uso</a>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.35rem; color:inherit; text-decoration:none;">Políticas de privacidad de datos</a>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.35rem; color:inherit; text-decoration:none;">Botón de arrepentimiento</a>
+    </div>
+    <div style="min-width:10rem;">
+      <p style="font-weight:800; margin:0;">Nosotros</p>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.5rem; color:inherit; text-decoration:none;">Quiénes somos</a>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.35rem; color:inherit; text-decoration:none;">Sucursal</a>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.35rem; color:inherit; text-decoration:none;">Trabajá con nosotros</a>
+    </div>
+    <div style="min-width:10rem;">
+      <p style="font-weight:800; margin:0;">Ayuda</p>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.5rem; color:inherit; text-decoration:none;">Preguntas frecuentes</a>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.35rem; color:inherit; text-decoration:none;">Contacto</a>
+      <a href="#" style="display:block; font-size:0.85rem; opacity:0.8; margin-top:0.35rem; color:inherit; text-decoration:none;">Libro de quejas</a>
+    </div>
+  </div>
+  <p style="text-align:center; font-size:0.75rem; opacity:0.6; margin:2rem 0 0;">© 2026 SistemaBase. Todos los derechos reservados.</p>
 </footer>
-</div>
 
-<!-- =========================================
-    VISTAS PRIVADAS (DASHBOARD)
-========================================= -->
-<div id="private-layout" class="dashboard-layout hidden">
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">Admin Panel</div>
-        <ul class="sidebar-nav">
-            <li><a href="#" onclick="app.renderDashboard()" id="nav-dash" class="active">📊 Dashboard</a></li>
-            <li><a href="#" onclick="app.renderUsers()" id="nav-users">👥 Usuarios</a></li>
-            <li><a href="#" onclick="app.renderProducts()" id="nav-products">📦 Productos</a></li>
-            <li><a href="#" onclick="app.renderApariencia()" id="nav-apariencia">🎨 Apariencia</a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <button onclick="app.logout()" class="btn btn-outline" style="width: 100%; border-color: #475569; color: #cbd5e1;">Cerrar Sesión</button>
-        </div>
-    </aside>
+<script src="js/api.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/foodcard.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+  const u = getUsuario();
+  if (u) document.getElementById("cta-pedir").href = destinoPorRol(u.role);
+  if (u) document.getElementById("cta-cuenta").href = destinoPorRol(u.role);
 
-    <div class="dashboard-content">
-        <div class="topbar">
-            <button class="btn btn-outline" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display: none;" id="mobile-menu-btn">☰</button>
-            <div class="user-info">
-                <span id="user-name-display">Usuario</span>
-                <div class="avatar">A</div>
-                <button onclick="app.logout()" class="btn btn-outline" style="padding:0.35rem 0.9rem;">Cerrar Sesión</button>
-            </div>
-        </div>
-        
-        <div class="content-area" id="admin-content">
-            <!-- Contenido del Dashboard inyectado aquí -->
-        </div>
-    </div>
-</div>
+  // Menú de la home: mismo comportamiento que menu.html (día + categoría),
+  // pero embebido acá para que se vea sin navegar a otra página.
+  let diaActual = DIAS.includes(diaDeHoy()) ? diaDeHoy() : "lunes";
+  let categoriaActual = "Todos";
+  let productosDelDia = [];
 
-<!-- =========================================
-      MODALES GENÉRICOS
-      ========================================= -->
-<div id="modal-container" class="modal-overlay hidden">
-    <!-- Contenido del modal dinámico -->
-</div>
+  async function cargarDiaHome(dia) {
+    diaActual = dia ?? diaActual;
+    categoriaActual = "Todos";
+    document.getElementById("dias").innerHTML = DIAS.map(
+      (d) => `<button class="chip ${d === diaActual ? "activo" : ""}" onclick="cargarDiaHome('${d}')">${DIA_LABEL[d]}</button>`
+    ).join("");
+    productosDelDia = await apiGet(`/products/by-day?day=${diaActual}`);
+    renderMenuHome();
+  }
 
-<!-- SCRIPTS -->
-<!--  Lógica de Login y Cerrar Sesión -->
-<script src="./js/script.js"></script>  
+  function filtrarCategoriaHome(cat) {
+    categoriaActual = cat;
+    renderMenuHome();
+  }
 
+  function renderMenuHome() {
+    document.getElementById("filtros").innerHTML = productosDelDia.length
+      ? renderFiltrosCategoria(productosDelDia, categoriaActual, "filtrarCategoriaHome")
+      : "";
 
+    const cont = document.getElementById("menu");
+    if (productosDelDia.length === 0) {
+      cont.innerHTML = `<div class="card" style="grid-column:1/-1; text-align:center; opacity:0.7;">Todavía no hay platos cargados para el ${DIA_LABEL[diaActual].toLowerCase()}.</div>`;
+      return;
+    }
+    const visibles = categoriaActual === "Todos" ? productosDelDia : productosDelDia.filter((p) => p.category === categoriaActual);
+    const destino = u ? destinoPorRol(u.role) : "registro.html";
+    cont.innerHTML = visibles
+      .map((p) => renderFoodCard(p, `<span class="fc-price">${fmtPrecio(p.price)}</span><a href="${destino}" class="btn-orange" style="font-size:0.8rem;">Pedir</a>`))
+      .join("");
+  }
+
+  cargarDiaHome();
+</script>
 </body>
 </html>

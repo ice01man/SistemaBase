@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ingresar · SistemaBase</title>
+<link rel="stylesheet" href="css/brie.css" />
+<style>
+  .auth-bg { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem; background: radial-gradient(circle at top, #8471c9, #453a6b 70%); }
+  .auth-glass { width:100%; max-width:26rem; border-radius:2rem; border:1px solid rgba(255,255,255,0.2); background:rgba(65,54,107,0.6); box-shadow:0 25px 50px rgba(0,0,0,0.35); backdrop-filter: blur(20px); padding:2rem; color:#fff; }
+  .auth-tabs { display:flex; background:rgba(255,255,255,0.1); border-radius:1rem; padding:0.25rem; margin-bottom:1.5rem; }
+  .auth-tab { flex:1; text-align:center; padding:0.5rem; border-radius:0.75rem; font-weight:800; font-size:0.875rem; cursor:pointer; border:none; background:transparent; color:rgba(255,255,255,0.75); }
+  .auth-tab.activo { background:#fff; color:#5d4e8e; }
+  .input-glass { width:100%; border-radius:0.75rem; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.15); padding:0.6rem 0.75rem; font-size:0.875rem; color:#fff; outline:none; }
+  .input-glass::placeholder { color:rgba(255,255,255,0.5); }
+  .label-glass { display:block; margin-bottom:0.25rem; font-size:0.7rem; font-weight:800; text-transform:uppercase; color:rgba(255,255,255,0.75); }
+</style>
+</head>
+<body>
+<div class="auth-bg">
+  <div class="auth-glass">
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab activo" id="tab-login" onclick="cambiarModo('login')">Ingresar</button>
+      <button type="button" class="auth-tab" id="tab-registro" onclick="cambiarModo('registro')">Crear cuenta</button>
+    </div>
+
+    <form id="form-login">
+      <div style="text-align:center; margin-bottom:1rem;">
+        <h2 style="margin:0; font-size:1.5rem; font-weight:800;">Ingresar</h2>
+        <p style="margin:0.25rem 0 0; font-size:0.875rem; opacity:0.7;">Accedé a tu cuenta</p>
+      </div>
+      <label class="label-glass">Email</label>
+      <input class="input-glass" name="email" type="email" required style="margin-bottom:0.75rem;" />
+      <label class="label-glass">Contraseña</label>
+      <input class="input-glass" name="password" type="password" required style="margin-bottom:0.75rem;" />
+      <div id="login-error"></div>
+      <button class="btn-orange" style="width:100%; padding:0.75rem; margin-top:0.5rem;" type="submit" id="login-btn">Ingresar</button>
+    </form>
+
+    <form id="form-registro" style="display:none;">
+      <div style="text-align:center; margin-bottom:1rem;">
+        <h2 style="margin:0; font-size:1.5rem; font-weight:800;">Crear cuenta</h2>
+        <p style="margin:0.25rem 0 0; font-size:0.875rem; opacity:0.7;">Registrate como cliente</p>
+      </div>
+      <label class="label-glass">Nombre y apellido *</label>
+      <input class="input-glass" name="nombre" required style="margin-bottom:0.75rem;" />
+      <label class="label-glass">Email *</label>
+      <input class="input-glass" name="email" type="email" required style="margin-bottom:0.75rem;" />
+      <label class="label-glass">Contraseña * (mín. 6 caracteres)</label>
+      <input class="input-glass" name="password" type="password" minlength="6" required style="margin-bottom:0.75rem;" />
+      <label class="label-glass">Dirección de entrega</label>
+      <input class="input-glass" name="direccion" placeholder="Calle y número" style="margin-bottom:0.75rem;" />
+      <div id="registro-error"></div>
+      <button class="btn-orange" style="width:100%; padding:0.75rem; margin-top:0.5rem;" type="submit" id="registro-btn">Crear cuenta</button>
+    </form>
+
+    <p style="text-align:center; margin-top:1rem; font-size:0.75rem;">
+      <a href="index.html" style="color:rgba(255,255,255,0.7);">← Volver al inicio</a>
+    </p>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  function cambiarModo(modo) {
+    document.getElementById("form-login").style.display = modo === "login" ? "block" : "none";
+    document.getElementById("form-registro").style.display = modo === "registro" ? "block" : "none";
+    document.getElementById("tab-login").classList.toggle("activo", modo === "login");
+    document.getElementById("tab-registro").classList.toggle("activo", modo === "registro");
+  }
+  if (new URLSearchParams(location.search).get("modo") === "registro") cambiarModo("registro");
+
+  function mostrarError(contId, msg) {
+    document.getElementById(contId).innerHTML = `<p class="msg-error" style="background:rgba(239,68,68,0.25); color:#fecaca;">${esc(msg)}</p>`;
+  }
+  function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  document.getElementById("form-login").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("login-btn");
+    document.getElementById("login-error").innerHTML = "";
+    btn.disabled = true; btn.textContent = "Ingresando...";
+    const datos = Object.fromEntries(new FormData(e.target));
+    try {
+      const { token, user } = await apiPost("/auth/login", datos);
+      setSesion(token, user);
+      location.href = destinoPorRol(user.role);
+    } catch (err) {
+      mostrarError("login-error", err.message);
+      btn.disabled = false; btn.textContent = "Ingresar";
+    }
+  });
+
+  document.getElementById("form-registro").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("registro-btn");
+    document.getElementById("registro-error").innerHTML = "";
+    btn.disabled = true; btn.textContent = "Creando cuenta...";
+    const datos = Object.fromEntries(new FormData(e.target));
+    try {
+      const { token, user } = await apiPost("/auth/register", datos);
+      setSesion(token, user);
+      location.href = destinoPorRol(user.role);
+    } catch (err) {
+      mostrarError("registro-error", err.message);
+      btn.disabled = false; btn.textContent = "Crear cuenta";
+    }
+  });
+</script>
+</body>
+</html>

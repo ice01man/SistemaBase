@@ -1,13 +1,13 @@
 import express from 'express';
-import { authRequired } from '../middleware/auth.js';
+import { authRequired, requireRol } from '../middleware/auth.js';
 import { getProducts,getProductsByDay ,createProduct,updateProduct ,deleteProduct } from '../controllers/productController.js';
 
 const router = express.Router();
 
 router.get('/',  getProducts);
-router.get('/products', authRequired, getProductsByDay);
-router.put('/:id', authRequired, updateProduct);
-router.post('/', authRequired, createProduct);
-router.delete('/:id', authRequired, deleteProduct);
+router.get('/by-day', getProductsByDay); // público: así arma el menú quien todavía no inició sesión
+router.put('/:id', authRequired, requireRol('admin'), updateProduct);
+router.post('/', authRequired, requireRol('admin'), createProduct);
+router.delete('/:id', authRequired, requireRol('admin'), deleteProduct);
 
 export default router;

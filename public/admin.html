@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Administración · SistemaBase</title>
+<link rel="stylesheet" href="css/brie.css" />
+</head>
+<body>
+<div id="navbar"></div>
+
+<main class="container">
+  <div class="db-layout">
+    <nav class="db-sidebar">
+      <a href="#productos" data-tab="productos" class="activo">🍽️ Productos</a>
+      <a href="#usuarios" data-tab="usuarios">👥 Usuarios</a>
+      <a href="#apariencia" data-tab="apariencia">🎨 Apariencia</a>
+    </nav>
+    <div class="db-content">
+      <section id="tab-productos"></section>
+      <section id="tab-usuarios" style="display:none;"></section>
+      <section id="tab-apariencia" style="display:none;"></section>
+    </div>
+  </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+  async function init() {
+    const usuario = requireRol("admin");
+    if (!usuario) return;
+
+    document.querySelectorAll(".db-sidebar a").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.querySelectorAll(".db-sidebar a").forEach((x) => x.classList.remove("activo"));
+        a.classList.add("activo");
+        document.querySelectorAll(".db-content > section").forEach((s) => (s.style.display = "none"));
+        document.getElementById(`tab-${a.dataset.tab}`).style.display = "block";
+      });
+    });
+
+    await Promise.all([cargarProductos(), cargarUsuarios(), cargarApariencia()]);
+  }
+
+  // ---------------- Productos ----------------
+  let productosCache = [];
+
+  async function cargarProductos() {
+    productosCache = await apiGet("/products");
+    renderProductos();
+  }
+
+  function renderProductos() {
+    const cont = document.getElementById("tab-productos");
+    cont.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+        <h2 style="font-size:1.5rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Productos</h2>
+        <button class="btn-orange" onclick="abrirFormProducto()">+ Nuevo producto</button>
+      </div>
+      <div id="form-producto-cont" style="margin-top:1rem;"></div>
+      <div style="overflow-x:auto; margin-top:1rem;">
+        <table>
+          <thead><tr><th>Nombre</th><th>Categoría</th><th>Día</th><th>Precio</th><th></th></tr></thead>
+          <tbody>
+            ${productosCache
+              .map(
+                (p) => `
+              <tr>
+                <td>${esc(p.name)}</td>
+                <td>${esc(p.category)}</td>
+                <td style="text-transform:capitalize;">${esc(p.day)}</td>
+                <td>${fmtPrecio(p.price)}</td>
+                <td style="white-space:nowrap;">
+                  <button class="btn-ghost" style="font-size:0.75rem;" onclick='abrirFormProducto(${JSON.stringify(p).replace(/'/g, "&apos;")})'>Editar</button>
+                  <button class="btn-danger" style="font-size:0.75rem;" onclick="borrarProducto('${p._id}')">Borrar</button>
+                </td>
+              </tr>`
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function abrirFormProducto(p) {
+    const cont = document.getElementById("form-producto-cont");
+    const ingredientes = (p?.ingredients || []).join(", ");
+    cont.innerHTML = `
+      <form id="form-producto" class="card" style="display:grid; gap:0.75rem; grid-template-columns:1fr 1fr;">
+        <input type="hidden" name="_id" value="${p?._id ?? ""}" />
+        <div><label class="label">Nombre</label><input class="input" name="name" value="${esc(p?.name ?? "")}" required /></div>
+        <div><label class="label">Categoría</label>
+          <select class="input" name="category">
+            ${["Gourmet", "Vegano", "Sandwich", "Del Dia"].map((c) => `<option ${p?.category === c ? "selected" : ""}>${c}</option>`).join("")}
+          </select>
+        </div>
+        <div><label class="label">Día</label>
+          <select class="input" name="day">
+            ${DIAS.map((d) => `<option value="${d}" ${p?.day === d ? "selected" : ""}>${DIA_LABEL[d]}</option>`).join("")}
+          </select>
+        </div>
+        <div><label class="label">Precio</label><input class="input" name="price" type="number" min="0" value="${p?.price ?? ""}" required /></div>
+        <div style="grid-column:1/-1;"><label class="label">Descripción</label><input class="input" name="description" value="${esc(p?.description ?? "")}" required /></div>
+        <div style="grid-column:1/-1;"><label class="label">Ingredientes (separados por coma)</label><input class="input" name="ingredientsCsv" value="${esc(ingredientes)}" /></div>
+        <div style="grid-column:1/-1;"><label class="label">URL de imagen</label><input class="input" name="image" value="${esc(p?.image ?? "")}" required /></div>
+        <div style="grid-column:1/-1;"><label class="label">Tags / dieta (separados por coma, ej: Sin Gluten, 100% Vegano)</label><input class="input" name="tagsCsv" value="${esc((p?.tags || []).join(", "))}" /></div>
+        <div><label class="label">Badge destacado (opcional, ej: Almuerzo Incluido)</label><input class="input" name="destacado" value="${esc(p?.destacado ?? "")}" /></div>
+        <div style="display:flex; gap:0.5rem;">
+          <div style="flex:1;"><label class="label">Rating (0-5)</label><input class="input" name="ratingPromedio" type="number" min="0" max="5" step="0.1" value="${p?.rating?.promedio ?? 0}" /></div>
+          <div style="flex:1;"><label class="label">Cant. de reseñas</label><input class="input" name="ratingCantidad" type="number" min="0" value="${p?.rating?.cantidad ?? 0}" /></div>
+        </div>
+        <div id="form-producto-error" style="grid-column:1/-1;"></div>
+        <div style="grid-column:1/-1; display:flex; gap:0.5rem;">
+          <button class="btn-primary" type="submit">${p ? "Guardar cambios" : "Crear producto"}</button>
+          <button class="btn-ghost" type="button" onclick="document.getElementById('form-producto-cont').innerHTML=''">Cancelar</button>
+        </div>
+      </form>
+    `;
+    document.getElementById("form-producto").addEventListener("submit", guardarProducto);
+  }
+
+  async function guardarProducto(e) {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    const body = {
+      name: fd.name, category: fd.category, day: fd.day,
+      description: fd.description, image: fd.image,
+      price: Number(fd.price),
+      ingredients: fd.ingredientsCsv.split(",").map((s) => s.trim()).filter(Boolean),
+      tags: fd.tagsCsv.split(",").map((s) => s.trim()).filter(Boolean),
+      destacado: fd.destacado || null,
+      rating: { promedio: Number(fd.ratingPromedio || 0), cantidad: Number(fd.ratingCantidad || 0) },
+    };
+    try {
+      if (fd._id) await apiPut(`/products/${fd._id}`, body);
+      else await apiPost("/products", body);
+      document.getElementById("form-producto-cont").innerHTML = "";
+      await cargarProductos();
+    } catch (err) {
+      document.getElementById("form-producto-error").innerHTML = `<p class="msg-error">${esc(err.message)}</p>`;
+    }
+  }
+
+  async function borrarProducto(id) {
+    if (!confirm("¿Borrar este producto?")) return;
+    try {
+      await apiDelete(`/products/${id}`);
+      await cargarProductos();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // ---------------- Usuarios ----------------
+  async function cargarUsuarios() {
+    const usuarios = await apiGet("/users");
+    const cont = document.getElementById("tab-usuarios");
+    cont.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+        <h2 style="font-size:1.5rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Usuarios</h2>
+        <button class="btn-orange" onclick="abrirFormUsuario()">+ Nuevo usuario</button>
+      </div>
+      <div id="form-usuario-cont" style="margin-top:1rem;"></div>
+      <div style="overflow-x:auto; margin-top:1rem;">
+        <table>
+          <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th></th></tr></thead>
+          <tbody>
+            ${usuarios
+              .map(
+                (u) => `
+              <tr>
+                <td>${esc(u.nombre)}</td>
+                <td>${esc(u.email)}</td>
+                <td>${ROL_LABEL[u.rol] ?? esc(u.rol)}</td>
+                <td style="white-space:nowrap;">
+                  <button class="btn-ghost" style="font-size:0.75rem;" onclick='abrirFormUsuario(${JSON.stringify(u).replace(/'/g, "&apos;")})'>Editar</button>
+                  <button class="btn-danger" style="font-size:0.75rem;" onclick="borrarUsuario('${u._id}')">Borrar</button>
+                </td>
+              </tr>`
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function abrirFormUsuario(u) {
+    const cont = document.getElementById("form-usuario-cont");
+    cont.innerHTML = `
+      <form id="form-usuario" class="card" style="display:grid; gap:0.75rem; grid-template-columns:1fr 1fr;">
+        <input type="hidden" name="_id" value="${u?._id ?? ""}" />
+        <div><label class="label">Nombre</label><input class="input" name="nombre" value="${esc(u?.nombre ?? "")}" required /></div>
+        <div><label class="label">Email</label><input class="input" name="email" type="email" value="${esc(u?.email ?? "")}" required /></div>
+        <div><label class="label">Rol</label>
+          <select class="input" name="rol">
+            ${["cliente", "user", "admin"].map((r) => `<option value="${r}" ${u?.rol === r ? "selected" : ""}>${ROL_LABEL[r]}</option>`).join("")}
+          </select>
+        </div>
+        <div><label class="label">${u ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña"}</label><input class="input" name="password" type="password" ${u ? "" : "required"} minlength="6" /></div>
+        <div id="form-usuario-error" style="grid-column:1/-1;"></div>
+        <div style="grid-column:1/-1; display:flex; gap:0.5rem;">
+          <button class="btn-primary" type="submit">${u ? "Guardar cambios" : "Crear usuario"}</button>
+          <button class="btn-ghost" type="button" onclick="document.getElementById('form-usuario-cont').innerHTML=''">Cancelar</button>
+        </div>
+      </form>
+    `;
+    document.getElementById("form-usuario").addEventListener("submit", guardarUsuario);
+  }
+
+  async function guardarUsuario(e) {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    const body = { nombre: fd.nombre, email: fd.email, rol: fd.rol };
+    if (fd.password) body.password = fd.password;
+    try {
+      if (fd._id) await apiPut(`/users/${fd._id}`, body);
+      else await apiPost("/users", body);
+      document.getElementById("form-usuario-cont").innerHTML = "";
+      await cargarUsuarios();
+    } catch (err) {
+      document.getElementById("form-usuario-error").innerHTML = `<p class="msg-error">${esc(err.message)}</p>`;
+    }
+  }
+
+  async function borrarUsuario(id) {
+    if (!confirm("¿Borrar este usuario?")) return;
+    try {
+      await apiDelete(`/users/${id}`);
+      await cargarUsuarios();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // ---------------- Apariencia ----------------
+  async function cargarApariencia() {
+    const { tema } = await apiGet("/config");
+    const cont = document.getElementById("tab-apariencia");
+    const opciones = [
+      { valor: "violeta", nombre: "Violeta", color: "#7a68b5" },
+      { valor: "trueno", nombre: "Trueno", color: "#0891b2" },
+      { valor: "bosque", nombre: "Bosque", color: "#15803d" },
+    ];
+    cont.innerHTML = `
+      <h2 style="font-size:1.5rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Apariencia</h2>
+      <p style="opacity:0.7;">Elegí la paleta de colores de todo el sitio.</p>
+      <div style="display:flex; gap:1rem; margin-top:1rem; flex-wrap:wrap;">
+        ${opciones
+          .map(
+            (o) => `
+          <button class="card" style="cursor:pointer; text-align:center; width:8rem; ${tema === o.valor ? "border-color:var(--brie-violet); border-width:2px;" : ""}" onclick="elegirTema('${o.valor}')">
+            <div style="height:2.5rem; border-radius:0.5rem; background:${o.color};"></div>
+            <p style="margin:0.5rem 0 0; font-weight:800;">${o.nombre}</p>
+          </button>`
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  async function elegirTema(tema) {
+    try {
+      await apiPatch("/config", { tema });
+      document.documentElement.setAttribute("data-tema", tema === "violeta" ? "" : tema);
+      await cargarApariencia();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

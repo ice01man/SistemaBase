@@ -20,8 +20,8 @@ export const getProductsByDay = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, day, description, ingredients, image, price } = req.body;
-    const data = { name, category, day, description, ingredients, image, price };
+    const { name, category, day, description, ingredients, image, price, tags, destacado, rating } = req.body;
+    const data = { name, category, day, description, ingredients, image, price, tags, destacado, rating };
     if (getModo() !== 'mongo') return res.status(201).json(memoria.createProduct(data));
     const saved = await new Product(data).save();
     res.status(201).json(saved);
@@ -30,8 +30,8 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
-    const { name, category, day, description, ingredients, image, price } = req.body;
-    const data = { name, category, day, description, ingredients, image, price };
+    const { name, category, day, description, ingredients, image, price, tags, destacado, rating } = req.body;
+    const data = { name, category, day, description, ingredients, image, price, tags, destacado, rating };
     if (getModo() !== 'mongo') {
       const upd = memoria.updateProduct(req.params.id, data);
       return upd ? res.json(upd) : res.status(404).json({ message: 'No encontrado' });

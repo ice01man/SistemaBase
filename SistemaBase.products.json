@@ -1,0 +1,525 @@
+[{
+  "_id": {
+    "$oid": "6aaa02c2a55037e172b4962f"
+  },
+  "name": "Lomo al Vino con Papas",
+  "category": "Gourmet",
+  "day": "lunes",
+  "description": "Medallón de lomo, Reducción de vino tinto, Papas rústicas",
+  "ingredients": [
+    "Medallón de lomo",
+    "Reducción de vino tinto",
+    "Papas rústicas"
+  ],
+  "image": "https://bodegagarzon.com/wp-content/uploads/2018/08/lomo-al-vino-tinto-800x585-750x450.jpg",
+  "price": 4800,
+  "createdAt": {
+    "$date": "2026-09-16T02:45:22.999Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T02:45:22.999Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa04312a1f378bbbe8fc8f"
+  },
+  "name": "Pollo al Curry con Leche de Coco y Coliflor",
+  "category": "Gourmet",
+  "day": "martes",
+  "description": "Pollo al Curry con Leche de Coco y Coliflor.",
+  "ingredients": [
+    "Pollo al Curry con Leche de Coco y Coliflor"
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0nGcGzRZTNsXHmU6qAwhxR0E33bFvmDsbU0YK7_j0cg&s=10",
+  "price": 5600,
+  "createdAt": {
+    "$date": "2026-09-16T02:51:29.805Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T12:12:10.526Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa7a71b7606bb90264dc6b"
+  },
+  "name": "Wok de Tofu y Vegetales con Salsa de Maní",
+  "category": "Vegano",
+  "day": "lunes",
+  "description": ".",
+  "ingredients": [
+    "tofu firme",
+    "brócoli",
+    "morrón rojo",
+    "zanahoria",
+    "cebolla de verdeo",
+    "salsa de soja",
+    "manteca de maní",
+    "jengibre",
+    "aceite. Saltear tofu dorado",
+    "agregar vegetales al dente",
+    "ligar con salsa de soja + maní + jengibre."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTC4_rLa6ppRBZeee7CJiwDjOsVsj_ZYK0YVhSAqOBtyg&s=10",
+  "price": 7800,
+  "createdAt": {
+    "$date": "2026-09-16T11:16:01.941Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:16:01.941Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa7ab2b7606bb90264dc6c"
+  },
+  "name": "Curry de Garbanzos y Espinaca con Leche de Coco",
+  "category": "Vegano",
+  "day": "martes",
+  "description": ".",
+  "ingredients": [
+    "garbanzos",
+    "espinaca",
+    "leche de coco",
+    "tomate triturado",
+    "cebolla",
+    "ajo",
+    "curry",
+    "jengibre. Sofrito",
+    "agregar curry",
+    "tomate y garbanzos",
+    "leche de coco",
+    "cerrar con espinaca."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4gYrFeJGqEvZ_MIFwvY2h5rFU2-qAIAjZh-sgNL7J1Q&s=10",
+  "price": 7800,
+  "createdAt": {
+    "$date": "2026-09-16T11:17:06.017Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:17:06.017Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa7aeab7606bb90264dc6d"
+  },
+  "name": "Buddha Bowl de Quinoa, Palta y Vegetales Asados",
+  "category": "Vegano",
+  "day": "miercoles",
+  "description": ".",
+  "ingredients": [
+    "quinoa",
+    "garbanzos",
+    "batata",
+    "zucchini",
+    "palta",
+    "hojas verdes",
+    "aderezo de tahini y limón. Asar vegetales",
+    "montar el bowl",
+    "aderezar."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5i0zSaeJ-eyIi9RSzbaOATMAR8DHpQib8168tXzHApA&s=10",
+  "price": 7800,
+  "createdAt": {
+    "$date": "2026-09-16T11:18:02.127Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:18:02.127Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa7b21b7606bb90264dc6e"
+  },
+  "name": "Hamburguesa de Lentejas y Avena",
+  "category": "Vegano",
+  "day": "jueves",
+  "description": "..",
+  "ingredients": [
+    "lentejas cocidas",
+    "avena",
+    "cebolla",
+    "ajo",
+    "comino",
+    "pan rallado",
+    "aceite. Procesar",
+    "formar medallones",
+    "dorar en sartén; servir con hojas y tomate."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiJM8wWVj5s5kQ005ItZjw7ohN26Xoj0M02QfU0TQzkw&s=10",
+  "price": 7800,
+  "createdAt": {
+    "$date": "2026-09-16T11:18:57.407Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T17:02:51.297Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa7b5eb7606bb90264dc6f"
+  },
+  "name": "Fideos de Zucchini con Pesto de Albahaca y Tomates Cherry",
+  "category": "Vegano",
+  "day": "viernes",
+  "description": ".",
+  "ingredients": [
+    "zucchini en espirales",
+    "albahaca",
+    "nueces",
+    "ajo",
+    "aceite de oliva",
+    "tomates cherry",
+    "levadura nutricional. Pesto en crudo",
+    "saltear el zucchini apenas",
+    "integrar."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-x7Dr4otzDMdB7gBTKKWYSzOW0zRHzWJ1YOTvs2A0NQ&s=10",
+  "price": 7800,
+  "createdAt": {
+    "$date": "2026-09-16T11:19:58.323Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:19:58.323Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa7b9eb7606bb90264dc70"
+  },
+  "name": "Sándwich de Milanesa de Pollo, Lechuga y Tomate",
+  "category": "Sandwich",
+  "day": "lunes",
+  "description": ".",
+  "ingredients": [
+    "pan",
+    "milanesa de pollo al horno",
+    "lechuga",
+    "tomate",
+    "mayonesa."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdgr8b0gBaNUJvbhHY4cx7EkltsqFk4ugtI6MTFzitfg&s=10",
+  "price": 8200,
+  "createdAt": {
+    "$date": "2026-09-16T11:21:02.929Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:21:02.929Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa7fea8d0dad872719b3e2"
+  },
+  "name": "Sándwich Caprese (Tomate, Mozzarella y Albahaca)",
+  "category": "Sandwich",
+  "day": "martes",
+  "description": ".",
+  "ingredients": [
+    "pan ciabatta",
+    "mozzarella",
+    "tomate",
+    "albahaca",
+    "aceite de oliva",
+    "sal."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsthXaHBD8Kp4R62YCVta1Y4Kewz2-WhE91fKHNbCweA&s=10",
+  "price": 8200,
+  "createdAt": {
+    "$date": "2026-09-16T11:39:22.212Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:39:22.212Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa80248d0dad872719b3e3"
+  },
+  "name": "Wrap de Pollo César",
+  "category": "Sandwich",
+  "day": "miercoles",
+  "description": ".",
+  "ingredients": [
+    "tortilla",
+    "pollo grillado",
+    "lechuga",
+    "parmesano",
+    "aderezo césar."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIDMvU9FiJeLA3gXdAwjZm9vGKlOlSgnuSLSufXzWN3Q&s=10",
+  "price": 8200,
+  "createdAt": {
+    "$date": "2026-09-16T11:40:20.335Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:40:20.335Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa80c78d0dad872719b3e4"
+  },
+  "name": "Sándwich Vegetal con Palta y Hummus",
+  "category": "Sandwich",
+  "day": "jueves",
+  "description": ".",
+  "ingredients": [
+    "pan integral",
+    "hummus",
+    "palta",
+    "zanahoria rallada",
+    "rúcula",
+    "tomate."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_RCoMeCPM952pb6r_r3XYtVTYgzGx_LDcsdLrVknInw&s=10",
+  "price": 8200,
+  "createdAt": {
+    "$date": "2026-09-16T11:43:03.243Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:43:03.243Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa81018d0dad872719b3e5"
+  },
+  "name": "Sándwich Caliente de Jamón, Queso y Tomate",
+  "category": "Sandwich",
+  "day": "viernes",
+  "description": ".",
+  "ingredients": [
+    "pan",
+    "jamón cocido",
+    "queso",
+    "tomate",
+    "orégano; tostado a la plancha."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0VwSQP1swW-nPdPQPvnxPItEBzEyy8rmbyLJU4X40vQ&s=10",
+  "price": 8200,
+  "createdAt": {
+    "$date": "2026-09-16T11:44:01.469Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:44:01.469Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa81948d0dad872719b3e6"
+  },
+  "name": "Milanesa con Puré",
+  "category": "Del Dia",
+  "day": "lunes",
+  "description": ".",
+  "ingredients": [
+    "Carne seleccionada'",
+    "'Puré de papa casero'",
+    "'Limón fresco'"
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSh-MEeAa8S8GBsP9ug0BTru6FufZUCpYX3vCbrp1kBQ&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T11:46:28.674Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:46:28.674Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa829f8d0dad872719b3e7"
+  },
+  "name": "Filet de Merluza a la Planche con Ensalada Mixta",
+  "category": "Del Dia",
+  "day": "martes",
+  "description": ".",
+  "ingredients": [
+    "\"2 filets de merluza\"",
+    "\"1/2 limón\"",
+    "\"1 diente de ajo picado\"",
+    "\"1 tomate\"",
+    "\"1/2 cebolla\"",
+    "\"Lechuga fresca\"",
+    "\"1 cucharada de aceite de oliva\"",
+    "\"Sal y pimienta a gusto\""
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMtPjeNybCyUwJYqWFnkhQqd5Y_-UgJARYvQNMyRNa9w&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T11:50:55.533Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:50:55.533Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa82d98d0dad872719b3e8"
+  },
+  "name": "Pechuga de Pollo a la Plancha con Puré de Zapallo",
+  "category": "Del Dia",
+  "day": "miercoles",
+  "description": ".",
+  "ingredients": [
+    "\"1 pechuga de pollo\"",
+    "\"300 g de zapallo anco\"",
+    "\"1 cucharadita de aceite de oliva\"",
+    "\"1 cucharada de queso crema light\"",
+    "\"Nuez moscada a gusto\"",
+    "\"Sal y pimienta a gusto\""
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvqvCbr0VtZd1SgvyeOYW6Bd3ijsv_BhRGRPCe3zUziw&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T11:51:53.795Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:51:53.795Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa831b8d0dad872719b3e9"
+  },
+  "name": "Medallón de Salmón al Horno con Vegetales Salteados",
+  "category": "Del Dia",
+  "day": "jueves",
+  "description": ".",
+  "ingredients": [
+    "\"1 medallón de salmón\"",
+    "\"1/2 pimiento rojo\"",
+    "\"1/2 zucchini\"",
+    "\"1/2 zanahoria en tiras\"",
+    "\"1 cucharada de aceite de oliva\"",
+    "\"Jugo de limón\"",
+    "\"Sal y orégano a gusto\""
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRExtmtoGlkqciXILHfvnDKiQuz2HXUU44XJkkTnqcjQg&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T11:52:59.237Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:52:59.237Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa83d78d0dad872719b3ea"
+  },
+  "name": "Churrasco de Lomo a la Plancha con Papa al Horno y Ensalada Mixta",
+  "category": "Del Dia",
+  "day": "viernes",
+  "description": ".",
+  "ingredients": [
+    "\"1 bife de lomo (200 g)\"",
+    "\"1 papa mediana\"",
+    "\"1/2 tomate\"",
+    "\"Lechuga fresca\"",
+    "\"1/2 cebolla\"",
+    "\"1 cucharada de aceite de oliva\"",
+    "\"Sal",
+    "pimienta y provenzal a gusto\""
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtuPuzWJCNzxJO7Yx_kL5NeciTt9-IOHG_ZXyIDayEsw&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T11:56:07.598Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T11:56:07.598Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa85898d0dad872719b3eb"
+  },
+  "name": "Pollo a la portuguesa",
+  "category": "Gourmet",
+  "day": "jueves",
+  "description": ".",
+  "ingredients": [
+    "Pollo cortado",
+    "papas",
+    "arvejas zanahoria",
+    "salsa de tomate"
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSh0Teo9h-8x91dxeLMGFpePXua4jdfnYndDqJ5VVPlNA&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T12:03:21.983Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T12:03:21.983Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa86248d0dad872719b3ec"
+  },
+  "name": "Arroz amarillo con pollo",
+  "category": "Gourmet",
+  "day": "viernes",
+  "description": ".",
+  "ingredients": [
+    "Pollo finamente cortado",
+    "curry",
+    "arroz",
+    "arvejas."
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaQqZ7se22us99tyusexXnj9MIGHW2KIXCTCaAUoIsmQ&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T12:05:56.062Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T12:05:56.062Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aaa86b38d0dad872719b3ed"
+  },
+  "name": "Hamburguesa de Pollo, Brocoli y vegetales",
+  "category": "Gourmet",
+  "day": "miercoles",
+  "description": ".",
+  "ingredients": [
+    "Pollo",
+    "brocoli",
+    "pimientos rojos",
+    "Zanahoria"
+  ],
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmLIuhzOLdexj0iSePMEO6jSr5_ir-r9Vej49hIUa51A&s=10",
+  "price": 9500,
+  "createdAt": {
+    "$date": "2026-09-16T12:08:19.701Z"
+  },
+  "updatedAt": {
+    "$date": "2026-09-16T12:08:19.701Z"
+  },
+  "__v": 0
+}]

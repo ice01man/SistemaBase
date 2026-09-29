@@ -51,6 +51,7 @@ export const updateUser = (id, data) => {
 
 // Productos
 export const getProducts    = () => products;
+export const getProductsByDay = (day) => products.filter(p => p.day === day);
 export const createProduct  = (data) => { const p = { id: nextId(products), ...data }; products.push(p); return p; };
 export const deleteProduct  = (id) => { const before = products.length; products = products.filter(p => p.id != id); return products.length < before; };
 
