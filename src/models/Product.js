@@ -8,6 +8,7 @@ const productSchema = new mongoose.Schema({
     ingredients: [],
     image: { type: String, required: true },
     price: { type: Number, required: true },
+    activo: { type: Boolean, default: true }, // false = no aparece en el menú público (se conserva para historial de pedidos)
     // Campos para la tarjeta de menú (badges/rating): cargados por el admin, no por reseñas de clientes.
     tags: { type: [String], default: [] },          // ej: "Sin Gluten", "100% Vegano"
     destacado: { type: String, default: null },      // ej: "Almuerzo Incluido" (badge sobre la foto)

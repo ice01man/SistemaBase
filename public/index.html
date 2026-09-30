@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SistemaBase · Menú semanal</title>
 <link rel="stylesheet" href="css/brie.css" />
-<base target="_blank">
 </head>
 <body>
 <div id="navbar"></div>
@@ -31,41 +30,7 @@
     </div>
   </section>
 
-  <!-- ============ 2. DESCUBRÍ NUESTRAS OPCIONES (cards estilo Car One: Comprar / Vender / Asegurar) ============ -->
-  <section class="container" style="padding:2rem 1rem;">
-    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Descubrí todo lo que podemos ofrecerte</h2>
-    <p style="text-align:center; opacity:0.7; margin-top:0.5rem; max-width:40rem; margin-left:auto; margin-right:auto;">
-      Contamos con una amplia gama de platos que cubren todos los gustos. Elegí tu línea favorita.
-    </p>
-    <div class="cards-grid" style="margin-top:1.5rem;">
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2.25rem;">🍽️</div>
-        <h3 style="margin:0.5rem 0 0;">Gourmet</h3>
-        <p style="font-size:0.875rem; opacity:0.8;">Platos elaborados con ingredientes seleccionados, para los paladares más exigentes.</p>
-        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2.25rem;">🌱</div>
-        <h3 style="margin:0.5rem 0 0;">Veganos</h3>
-        <p style="font-size:0.875rem; opacity:0.8;">Opciones 100% vegetales, equilibradas y llenas de sabor, sin sacrificar nada.</p>
-        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2.25rem;">🥪</div>
-        <h3 style="margin:0.5rem 0 0;">Sándwiches</h3>
-        <p style="font-size:0.875rem; opacity:0.8;">Clásicos y especiales, preparados al momento con pan fresco y rellenos generosos.</p>
-        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:2.25rem;">⭐</div>
-        <h3 style="margin:0.5rem 0 0;">Del Día</h3>
-        <p style="font-size:0.875rem; opacity:0.8;">La propuesta del chef que cambia cada día: casera, rendidora y al mejor precio.</p>
-        <a href="menu.html" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 3. CÓMO FUNCIONA (pasos numerados estilo Car One: 01 / 02 / 03) ============ -->
+  <!-- ============ 3. CÓMO FUNCIONA ============ -->
   <section class="container" style="padding:2rem 1rem;">
     <hr>
     <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Tres pasos simples para pedir tu menú</h2>
@@ -89,7 +54,7 @@
     </div>
   </section>
 
-  <!-- ============ 4. MENÚ SEMANAL (interactivo, sin cambios) ============ -->
+  <!-- ============ 4. MENÚ SEMANAL (interactivo) ============ -->
   <section class="container" style="padding:1rem 1rem 0;">
     <hr>
     <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep);">Menú semanal</h2>
@@ -99,7 +64,41 @@
     <div id="menu" class="cards-grid" style="margin-top:1.5rem;"></div>
   </section>
 
-  <!-- ============ 5. TESTIMONIOS (estilo Car One) ============ -->
+  <!-- ============ 2. DESCUBRÍ NUESTRAS OPCIONES ============ -->
+  <section class="container" style="padding:2rem 1rem;">
+    <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Descubrí todo lo que podemos ofrecerte</h2>
+    <p style="text-align:center; opacity:0.7; margin-top:0.5rem; max-width:40rem; margin-left:auto; margin-right:auto;">
+      Contamos con una amplia gama de platos que cubren todos los gustos. Elegí tu línea favorita.
+    </p>
+    <div class="grid-4" style="margin-top:1.5rem;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">🍽️</div>
+        <h3 style="margin:0.5rem 0 0;">Gourmet</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Platos elaborados con ingredientes seleccionados, para los paladares más exigentes.</p>
+        <a href="menu.html?categoria=Gourmet" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">🌱</div>
+        <h3 style="margin:0.5rem 0 0;">Veganos</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Opciones 100% vegetales, equilibradas y llenas de sabor, sin sacrificar nada.</p>
+        <a href="menu.html?categoria=Vegano" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">🥪</div>
+        <h3 style="margin:0.5rem 0 0;">Sándwiches</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">Clásicos y especiales, preparados al momento con pan fresco y rellenos generosos.</p>
+        <a href="menu.html?categoria=Sandwich" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:2.25rem;">⭐</div>
+        <h3 style="margin:0.5rem 0 0;">Del Día</h3>
+        <p style="font-size:0.875rem; opacity:0.8;">La propuesta del chef que cambia cada día: casera, rendidora y al mejor precio.</p>
+        <a href="menu.html?categoria=Del%20Dia" style="color:var(--brie-orange); font-weight:700; font-size:0.875rem;">Ver platos →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5. TESTIMONIOS ============ -->
   <section class="container" style="padding:2rem 1rem;">
     <hr>
     <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Conocé las experiencias de quienes nos eligen cada día</h2>
@@ -137,7 +136,7 @@
     </div>
   </section>
 
-  <!-- ============ 6. PANEL "MI SISTEMABASE" (estilo "Sos el protagonista de tu viaje") ============ -->
+  <!-- ============ 6. PANEL "MI SISTEMABASE" ============ -->
   <section class="container" style="padding:2rem 1rem;">
     <hr>
     <div class="card" style="background:var(--brie-violet-deep); color:#fff; text-align:center; padding:2.5rem 1.5rem;">
@@ -153,7 +152,7 @@
     </div>
   </section>
 
-  <!-- ============ 7. PREGUNTAS FRECUENTES (estilo Car One) ============ -->
+  <!-- ============ 7. PREGUNTAS FRECUENTES ============ -->
   <section class="container" style="padding:1rem 1rem 2rem;">
     <hr>
     <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Preguntas frecuentes</h2>
@@ -177,7 +176,7 @@
     </div>
   </section>
 
-  <!-- ============ 8. SUCURSAL / ¿DÓNDE ESTAMOS? (formato sucursales Car One) ============ -->
+  <!-- ============ 8. ¿DÓNDE ESTAMOS? ============ -->
   <section class="container" style="padding:1rem 1rem 2rem;">
     <hr>
     <h2 style="text-align:center; font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">¿Dónde estamos?</h2>
@@ -194,7 +193,7 @@
   </section>
 </main>
 
-<!-- ============ 9. FOOTER con columnas (estilo Car One) ============ -->
+<!-- ============ 9. FOOTER ============ -->
 <footer class="footer-brie" style="padding:2.5rem 1rem;">
   <div class="container" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:2rem; text-align:left;">
     <div style="min-width:12rem;">
@@ -233,8 +232,6 @@
   if (u) document.getElementById("cta-pedir").href = destinoPorRol(u.role);
   if (u) document.getElementById("cta-cuenta").href = destinoPorRol(u.role);
 
-  // Menú de la home: mismo comportamiento que menu.html (día + categoría),
-  // pero embebido acá para que se vea sin navegar a otra página.
   let diaActual = DIAS.includes(diaDeHoy()) ? diaDeHoy() : "lunes";
   let categoriaActual = "Todos";
   let productosDelDia = [];
