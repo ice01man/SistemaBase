@@ -143,7 +143,7 @@ th { color: var(--brie-violet-dark); font-weight: 800; font-size: .75rem; text-t
 .food-card:hover .fc-photo img { transform: scale(1.15); }
 .fc-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.5), transparent 45%); }
 
-.fc-cat { position: absolute; top: .7rem; left: .7rem; z-index: 2; display: inline-flex; align-items: center; gap: .3rem; background: var(--brie-orange-light); color: var(--brie-orange-dark); font-weight: 800; font-size: .72rem; padding: .3rem .7rem; border-radius: 999px; }
+.fc-cat { position: absolute; top: .7rem; left: .7rem; z-index: 2; display: inline-flex; align-items: center; gap: .3rem; background: var(--brie-orange-light); color: var(--brie-lavender-light); font-weight: 800; font-size: .72rem; padding: .3rem .7rem; border-radius: 999px; }
 .fc-meta { position: absolute; bottom: .7rem; left: .7rem; right: .7rem; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .fc-rate { display: inline-flex; align-items: center; gap: .3rem; background: rgba(15,23,42,.6); backdrop-filter: blur(6px); color: #fff; font-weight: 800; font-size: .8rem; padding: .28rem .6rem; border-radius: .5rem; }
 .fc-rate .star { color: #fbbf24; }
