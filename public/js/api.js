@@ -48,12 +48,15 @@ function requireRol(...roles) {
   return usuario;
 }
 
-function logout() {
+async function logout() {
   borrarSesion();
+  try { await apiPost("/auth/logout"); } catch { /* si falla, igual ya borramos el localStorage */ }
   location.href = "login.html";
 }
 
-/** A qué página va cada rol después de loguearse. */
+/** A qué página va cada rol después de loguearse.
+ *  admin/panel ya no son archivos .html sueltos: los sirve el servidor en /admin y /panel
+ *  después de validar el rol contra la cookie de sesión. */
 function destinoPorRol(role) {
-  return { admin: "admin.html", user: "panel.html", cliente: "pedir.html" }[role] ?? "index.html";
+  return { admin: "/admin", user: "/panel", cliente: "pedir.html" }[role] ?? "index.html";
 }

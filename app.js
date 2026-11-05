@@ -11,6 +11,7 @@ import userRoutes from './src/routes/userRoutes.js';
 import productRoutes from './src/routes/productRoutes.js';
 import orderRoutes from './src/routes/orderRoutes.js';
 import configRoutes from './src/routes/configRoutes.js';
+import { paginaRequiereRol } from './src/middleware/paginaAuth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -19,7 +20,18 @@ app.use(helmet({ contentSecurityPolicy: false })); // CSP off en dev para CDN de
 app.use(cors());
 //app.use(morgan('dev'));
 app.use(express.json());
-app.use(express.static(join(__dirname, 'public'))); // sirve el front en /
+
+// Páginas privadas: NO son archivos estáticos de /public (cualquiera podría pedirlas
+// por URL); se verifica el rol contra la cookie de sesión ANTES de mandar el HTML.
+// Van antes de express.static para que tengan prioridad sobre cualquier archivo suelto.
+app.get('/admin', paginaRequiereRol('admin'), (_req, res) => {
+  res.sendFile(join(__dirname, 'src/views/admin.html'));
+});
+app.get('/panel', paginaRequiereRol('user', 'admin'), (_req, res) => {
+  res.sendFile(join(__dirname, 'src/views/panel.html'));
+});
+
+app.use(express.static(join(__dirname, 'public'))); // sirve el front público en /
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

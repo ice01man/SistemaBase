@@ -3,8 +3,8 @@ const LINKS_POR_ROL = {
     { href: "pedir.html", label: "Hacer pedido" },
     { href: "mis-pedidos.html", label: "Mis pedidos" },
   ],
-  admin: [{ href: "admin.html", label: "Administración" }],
-  user: [{ href: "panel.html", label: "Panel de pedidos" }],
+  admin: [{ href: "/admin", label: "Administración" }],
+  user: [{ href: "/panel", label: "Panel de pedidos" }],
 };
 
 function renderNavbar() {

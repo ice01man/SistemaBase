@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panel de pedidos · SistemaBase</title>
+<link rel="stylesheet" href="css/brie.css" />
+</head>
+<body>
+<div id="navbar"></div>
+<main class="container" style="padding:2.5rem 1rem;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+    <h1 style="font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Panel de pedidos</h1>
+    <button class="btn-outline" onclick="cargar()">↻ Actualizar</button>
+  </div>
+
+  <div class="grid-2" style="margin-top:1.5rem; align-items:start;">
+    <div>
+      <h2 style="font-size:1.125rem; font-weight:800; color:var(--brie-violet-dark);">🕐 Pendientes</h2>
+      <div id="lista-pendientes" style="margin-top:0.75rem; display:flex; flex-direction:column; gap:1rem;"></div>
+    </div>
+    <div>
+      <h2 style="font-size:1.125rem; font-weight:800; color:var(--brie-violet-dark);">👩‍🍳 En preparación</h2>
+      <div id="lista-tomados" style="margin-top:0.75rem; display:flex; flex-direction:column; gap:1rem;"></div>
+    </div>
+  </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+  // El backend no expone un endpoint de "tomados por mí": lo llevamos en memoria del navegador,
+  // así el panel se ve cómodo. Si se recarga la página, un pedido tomado vuelve a la vista de
+  // pendientes hasta que alguien lo despache (no se pierde nada, es solo cosmético).
+  const tomadosLocal = new Map(); // id -> pedido
+
+  async function init() {
+    const usuario = requireRol("user", "admin");
+    if (!usuario) return;
+    await cargar();
+    setInterval(cargar, 20000);
+  }
+
+  async function cargar() {
+    const pendientes = await apiGet("/orders/pendientes");
+    const pendientesReales = pendientes.filter((p) => !tomadosLocal.has(p._id));
+
+    document.getElementById("lista-pendientes").innerHTML =
+      pendientesReales.length === 0
+        ? `<div class="card" style="text-align:center; opacity:0.7;">No hay pedidos pendientes. 🎉</div>`
+        : pendientesReales.map(renderPendiente).join("");
+
+    document.getElementById("lista-tomados").innerHTML =
+      tomadosLocal.size === 0
+        ? `<div class="card" style="text-align:center; opacity:0.7;">Nada en preparación por ahora.</div>`
+        : [...tomadosLocal.values()].map(renderTomado).join("");
+  }
+
+  function itemsHtml(p) {
+    return p.items.map((i) => `<div>${i.qty} × ${esc(i.name)}</div>`).join("");
+  }
+
+  function renderPendiente(p) {
+    return `
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:800; color:var(--brie-violet);">Pedido #${p._id.slice(-6)}</span>
+        <span style="font-size:0.75rem; opacity:0.6;">${fmtFechaHora(p.createdAt)}</span>
+      </div>
+      <div style="margin-top:0.5rem; font-size:0.875rem;">${itemsHtml(p)}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
+        <span style="font-weight:800; color:var(--brie-violet-deep);">${fmtPrecio(p.totalAmount)}</span>
+        <button class="btn-orange" onclick="tomar('${p._id}')">Tomar pedido</button>
+      </div>
+    </div>`;
+  }
+
+  function renderTomado(p) {
+    return `
+    <div class="card" style="border-color:var(--brie-orange);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:800; color:var(--brie-violet);">Pedido #${p._id.slice(-6)}</span>
+        <span class="badge" style="${ESTADO_COLOR.tomado}">${ESTADO_LABEL.tomado}</span>
+      </div>
+      <div style="margin-top:0.5rem; font-size:0.875rem;">${itemsHtml(p)}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
+        <span style="font-weight:800; color:var(--brie-violet-deep);">${fmtPrecio(p.totalAmount)}</span>
+        <button class="btn-primary" onclick="despachar('${p._id}')">Marcar despachado</button>
+      </div>
+    </div>`;
+  }
+
+  async function tomar(id) {
+    try {
+      const pedido = await apiPatch(`/orders/${id}/tomar`);
+      tomadosLocal.set(id, pedido);
+      await cargar();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  async function despachar(id) {
+    try {
+      await apiPatch(`/orders/${id}/despachar`);
+      tomadosLocal.delete(id);
+      await cargar();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

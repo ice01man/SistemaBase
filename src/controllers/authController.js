@@ -9,6 +9,18 @@ const SECRET = process.env.JWT_SECRET || 'dev_secret';
 const firmarToken = (u) =>
   jwt.sign({ id: u.id || u._id, rol: u.rol, email: u.email }, SECRET, { expiresIn: '8h' });
 
+// Además del token en el body (que el front guarda en localStorage para las llamadas a la API),
+// dejamos el mismo JWT en una cookie httpOnly. Sirve para que las páginas privadas (admin, panel)
+// se puedan verificar del lado del servidor ANTES de mandar el HTML, sin depender de JS del cliente.
+const setCookieSesion = (res, token) => {
+  res.cookie('sb_token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 8 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+  });
+};
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -19,7 +31,9 @@ export const login = async (req, res) => {
       const u = memoria.findUserByEmail(email);
       if (!u || u.password !== password) return res.status(401).json({ error: 'Credenciales inválidas' });
       const { password: _, ...safe } = u;
-      return res.json({ token: firmarToken(u), user: safe });
+      const token = firmarToken(u);
+      setCookieSesion(res, token);
+      return res.json({ token, user: safe });
     }
 
     // --- MODO MONGO ---
@@ -27,8 +41,10 @@ export const login = async (req, res) => {
     if (!u) return res.status(401).json({ error: 'Credenciales inválidas' });
     const ok = await bcrypt.compare(password, u.passwordHash);
     if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
+    const token = firmarToken(u);
+    setCookieSesion(res, token);
     return res.json({
-      token: firmarToken(u),
+      token,
       user: { id: u._id, name: u.nombre, email: u.email, role: u.rol },
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -45,14 +61,24 @@ export const register = async (req, res) => {
     if (getModo() !== 'mongo') {
       if (memoria.findUserByEmail(email)) return res.status(409).json({ error: 'Ya existe una cuenta con ese email.' });
       const u = memoria.createUser({ nombre, email, password, rol: 'cliente', direccion });
-      return res.status(201).json({ token: firmarToken({ id: u.id, rol: u.rol, email: u.email }), user: u });
+      const token = firmarToken({ id: u.id, rol: u.rol, email: u.email });
+      setCookieSesion(res, token);
+      return res.status(201).json({ token, user: u });
     }
 
     if (await User.findOne({ email })) return res.status(409).json({ error: 'Ya existe una cuenta con ese email.' });
     const saved = await new User({ nombre, email, passwordHash: password, rol: 'cliente', direccion }).save();
+    const token = firmarToken(saved);
+    setCookieSesion(res, token);
     return res.status(201).json({
-      token: firmarToken(saved),
+      token,
       user: { id: saved._id, name: saved.nombre, email: saved.email, role: saved.rol },
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// Limpia la cookie de sesión (el localStorage lo borra el propio front).
+export const logout = (_req, res) => {
+  res.clearCookie('sb_token');
+  res.json({ ok: true });
 };
