@@ -1,63 +1,33 @@
-import Order from '../models/Order.js';
-import { getModo } from '../config/modo.js';
-import * as memoria from '../config/memoria.js';
+import * as pedidos from '../services/pedidos.js';
+import { esFecha } from '../utils/fecha.js';
+import { ESTADOS } from '../models/Order.js';
 
-// En mongo el id del usuario sale del token; en modo local no hay identidad real,
-// así que el front lo manda en el body/query.
-const userIdActual = (req) =>
-  (req.usuario && !req.usuario.dev && req.usuario.id) || req.body.userId || req.query.userId || null;
+const estadosDeQuery = (q) => {
+  if (!q) return undefined;
+  const lista = String(q).split(',').filter((e) => ESTADOS.includes(e));
+  return lista.length ? lista : undefined;
+};
+const fechaDeQuery = (q) => (esFecha(q) ? q : undefined);
 
 // ---------- CLIENTE ----------
-export const createOrder = async (req, res) => {
-  try {
-    const { items, totalAmount } = req.body;
-    if (!items?.length) return res.status(400).json({ message: 'Carrito vacío' });
-    const userId = userIdActual(req);
-    if (getModo() !== 'mongo') return res.status(201).json(memoria.createOrder({ items, totalAmount, userId }));
-    const saved = await new Order({ items, totalAmount, userId, estado: 'confirmado' }).save();
-    res.status(201).json(saved);
-  } catch (e) { res.status(500).json({ message: e.message }); }
-};
+export const createOrder = async (req, res) => res.status(201).json(await pedidos.crearPedido(req.usuario, req.body ?? {}));
+export const getMisPedidos = async (req, res) => res.json(await pedidos.misPedidos(req.usuario.id));
+export const getPedido = async (req, res) => res.json(await pedidos.obtenerPedido(req.params.id, req.usuario));
+export const cancelarPedido = async (req, res) => res.json(await pedidos.cancelarPedido(req.params.id, req.usuario, req.body?.motivo));
+export const getFechasEntrega = async (_req, res) => res.json(await pedidos.fechasDeEntrega());
 
-export const getMisPedidos = async (req, res) => {
-  try {
-    const userId = userIdActual(req);
-    if (getModo() !== 'mongo') return res.json(memoria.getOrdersByUser(userId));
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (e) { res.status(500).json({ message: e.message }); }
-};
+// ---------- COCINA ----------
+export const getCocina = async (req, res) =>
+  res.json(await pedidos.listarPedidos({ estados: ['confirmado', 'en_preparacion'], fecha: fechaDeQuery(req.query.fecha) }));
 
-// ---------- EMPLEADO (user) — despacho ----------
-export const getPendientes = async (req, res) => {
-  try {
-    if (getModo() !== 'mongo') return res.json(memoria.getOrdersByEstado('confirmado'));
-    const orders = await Order.find({ estado: 'confirmado' }).sort({ createdAt: 1 });
-    res.json(orders);
-  } catch (e) { res.status(500).json({ message: e.message }); }
-};
+// ---------- REPARTO ----------
+export const getReparto = async (req, res) =>
+  res.json(await pedidos.listarPedidos({ estados: ['producido', 'en_camino'], fecha: fechaDeQuery(req.query.fecha) }));
 
-export const tomarPedido = async (req, res) => {
-  try {
-    const tomadoPor = userIdActual(req) || 'empleado';
-    if (getModo() !== 'mongo') {
-      const o = memoria.updateOrderEstado(req.params.id, 'tomado', { tomadoPor });
-      return o ? res.json(o) : res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-    const o = await Order.findByIdAndUpdate(req.params.id, { estado: 'tomado', tomadoPor }, { new: true });
-    if (!o) return res.status(404).json({ message: 'Pedido no encontrado' });
-    res.json(o);
-  } catch (e) { res.status(500).json({ message: e.message }); }
-};
+// ---------- ADMIN ----------
+export const getTodos = async (req, res) =>
+  res.json(await pedidos.listarPedidos({ estados: estadosDeQuery(req.query.estado), fecha: fechaDeQuery(req.query.fecha), desc: true }));
 
-export const despacharPedido = async (req, res) => {
-  try {
-    if (getModo() !== 'mongo') {
-      const o = memoria.updateOrderEstado(req.params.id, 'despachado');
-      return o ? res.json(o) : res.status(404).json({ message: 'Pedido no encontrado' });
-    }
-    const o = await Order.findByIdAndUpdate(req.params.id, { estado: 'despachado' }, { new: true });
-    if (!o) return res.status(404).json({ message: 'Pedido no encontrado' });
-    res.json(o);
-  } catch (e) { res.status(500).json({ message: e.message }); }
-};
+// ---------- CAMBIO DE ESTADO (cocina / reparto / admin) ----------
+export const patchEstado = async (req, res) => res.json(await pedidos.cambiarEstado(req.params.id, req.usuario, req.body?.estado));
+export const patchPago = async (req, res) => res.json(await pedidos.marcarPago(req.params.id, req.body?.pagado));

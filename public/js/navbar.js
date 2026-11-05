@@ -1,10 +1,21 @@
 const LINKS_POR_ROL = {
   cliente: [
+    { href: "menu.html", label: "Menú" },
     { href: "pedir.html", label: "Hacer pedido" },
     { href: "mis-pedidos.html", label: "Mis pedidos" },
   ],
-  admin: [{ href: "/admin", label: "Administración" }],
-  user: [{ href: "/panel", label: "Panel de pedidos" }],
+  admin: [
+    { href: "/admin", label: "Administración" },
+    { href: "/cocina", label: "Cocina" },
+    { href: "/reparto", label: "Reparto" },
+    { href: "pedir.html", label: "Hacer pedido" },
+  ],
+  produccion: [{ href: "/cocina", label: "Cocina y producción" }],
+  reparto: [{ href: "/reparto", label: "Entregas" }],
+  user: [
+    { href: "/cocina", label: "Cocina" },
+    { href: "/reparto", label: "Reparto" },
+  ],
 };
 
 function renderNavbar() {
@@ -16,7 +27,7 @@ function renderNavbar() {
   el.innerHTML = `
     <header class="brie-header">
       <div class="brie-nav">
-        <a href="index.html" class="font-brand brie-logo">SistemaBase</a>
+        <a href="index.html" class="font-brand brie-logo">Sistema BRIE</a>
         <div class="brie-nav-links brie-nav-desktop">
           ${links.map((l) => `<a href="${l.href}" class="btn-ghost">${esc(l.label)}</a>`).join("")}
         </div>

@@ -1,7 +1,4 @@
-let modo = 'memoria';
+// Compatibilidad: el modo ahora lo fija el entorno (PERSISTENCIA) y NO cambia en caliente.
+import { MODO } from './env.js';
 
-export const getModo = () => modo;
-export const setModo = (m) => {
-  modo = m;
-  console.log(`🔧 Modo persistencia: ${m.toUpperCase()}`);
-};
+export const getModo = () => MODO;

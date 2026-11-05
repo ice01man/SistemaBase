@@ -1,24 +1,20 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs'; 
+
+// Roles del sistema (RBAC). "user" se conserva como Empleado general (cocina + reparto).
+export const ROLES = ['admin', 'produccion', 'reparto', 'user', 'cliente'];
 
 const usuarioSchema = new mongoose.Schema({
   nombre:       { type: String, trim: true },
   email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
   passwordHash: { type: String, required: true },
-  rol:          { type: String, enum: ['user', 'admin', 'cliente'], default: 'user', required: true },
+  rol:          { type: String, enum: ROLES, default: 'cliente', required: true },
   direccion:    { type: String, trim: true, default: '' },
+  telefono:     { type: String, trim: true, default: '' },
   lat:          { type: Number, default: null },
   lng:          { type: Number, default: null },
   activo:       { type: Boolean, default: true },
 }, { timestamps: true });
 
-// Middleware para hashear antes de guardar
-usuarioSchema.pre('save', async function(next) {
-  if (!this.isModified('passwordHash')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
-  next();
-});
-
-
-export default mongoose.models.Usuario || mongoose.model('User', usuarioSchema);
+// OJO: el hash de la contraseña se hace en src/services/usuarios.js (igual en modo mongo y
+// memoria). Antes había un pre('save') acá; se sacó para no hashear dos veces.
+export default mongoose.models.User || mongoose.model('User', usuarioSchema);

@@ -28,6 +28,12 @@ async function api(path, options = {}) {
   });
   let data = null;
   try { data = await res.json(); } catch { /* sin cuerpo */ }
+  // Sesión vencida (o usuario desactivado): se limpia y se vuelve al login.
+  if (res.status === 401 && token && !path.startsWith("/auth/login")) {
+    borrarSesion();
+    location.href = "login.html?expirada=1";
+    throw new Error("Tu sesión venció. Ingresá de nuevo.");
+  }
   if (!res.ok) throw new Error(data?.error || data?.message || "Ocurrió un error. Probá de nuevo.");
   return data;
 }
@@ -38,7 +44,8 @@ const apiPut = (path, body) => api(path, { method: "PUT", body });
 const apiPatch = (path, body) => api(path, { method: "PATCH", body });
 const apiDelete = (path) => api(path, { method: "DELETE" });
 
-/** Exige sesión con alguno de los roles dados; si no hay, redirige a login.html. */
+/** Exige sesión con alguno de los roles dados; si no hay, redirige a login.html.
+ *  (Es solo comodidad de pantalla: la seguridad real la aplica el servidor en cada /api.) */
 function requireRol(...roles) {
   const usuario = getUsuario();
   if (!usuario || !getToken() || (roles.length && !roles.includes(usuario.role))) {
@@ -50,13 +57,13 @@ function requireRol(...roles) {
 
 async function logout() {
   borrarSesion();
+  localStorage.removeItem("sb_cart");
   try { await apiPost("/auth/logout"); } catch { /* si falla, igual ya borramos el localStorage */ }
   location.href = "login.html";
 }
 
 /** A qué página va cada rol después de loguearse.
- *  admin/panel ya no son archivos .html sueltos: los sirve el servidor en /admin y /panel
- *  después de validar el rol contra la cookie de sesión. */
+ *  Las páginas de personal las sirve el servidor después de validar el rol contra la cookie de sesión. */
 function destinoPorRol(role) {
-  return { admin: "/admin", user: "/panel", cliente: "pedir.html" }[role] ?? "index.html";
+  return { admin: "/admin", produccion: "/cocina", user: "/cocina", reparto: "/reparto", cliente: "pedir.html" }[role] ?? "index.html";
 }

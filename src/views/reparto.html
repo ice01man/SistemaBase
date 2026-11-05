@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entregas · SistemaBRIE</title>
+<link rel="stylesheet" href="css/brie.css" />
+</head>
+<body>
+<div id="navbar"></div>
+<main class="container" style="padding:2rem 1rem;">
+  <div class="barra-herramientas">
+    <h1 class="seccion-titulo">Entregas</h1>
+    <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+      <span id="actualizado" style="font-size:.75rem; opacity:.6;"></span>
+      <button class="btn-outline" onclick="cargar()">↻ Actualizar</button>
+    </div>
+  </div>
+  <div id="contenido" class="kanban" style="margin-top:1.25rem;"></div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+  let usuario = null;
+
+  async function init() {
+    usuario = requireRol("admin", "reparto", "user");
+    if (!usuario) return;
+    await cargar();
+    setInterval(cargar, 20000);
+  }
+
+  function mapaUrl(dir) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}`; }
+
+  function ticket(p) {
+    const listo = p.estado === "producido";
+    const hoy = hoyISO();
+    return `
+    <div class="card ticket ${listo ? "" : "preparando"}">
+      <div class="cab">
+        <span class="num">#${p.numero ?? p._id.slice(-6)}</span>
+        <span class="meta">${p.fechaEntrega === hoy ? "<b>HOY</b>" : fmtFechaEntrega(p.fechaEntrega)}</span>
+      </div>
+      <div class="items">${p.items.map((i) => `<div><b>${i.qty} ×</b> ${esc(i.name)}</div>`).join("")}</div>
+      <div style="font-size:.9rem;">
+        👤 <b>${esc(p.cliente?.nombre ?? "")}</b>${p.cliente?.telefono ? ` · <a href="tel:${esc(p.cliente.telefono)}" style="color:var(--brie-violet); font-weight:800;">${esc(p.cliente.telefono)}</a>` : ""}<br>
+        📍 <a href="${mapaUrl(p.direccion)}" target="_blank" rel="noopener" style="color:var(--brie-violet); font-weight:800; text-decoration:underline;">${esc(p.direccion)}</a>
+      </div>
+      ${p.observaciones ? `<div class="nota">📝 ${esc(p.observaciones)}</div>` : ""}
+      <div class="nota" style="background:${p.pagado || p.medioPago === "transferencia" ? "#f0fdf4" : "#fffbeb"};">
+        💳 ${esc(MEDIO_PAGO_LABEL[p.medioPago])} · ${p.pagado ? "ya pagado ✅" : p.medioPago === "efectivo" ? `<b>cobrar ${fmtPrecio(p.totalAmount)}</b>` : `verificar transferencia de ${fmtPrecio(p.totalAmount)}`}
+      </div>
+      <div class="acciones">
+        <span class="meta">${listo ? "Esperando repartidor" : `Lo lleva ${esc(p.repartidor ?? "")}`}</span>
+        ${listo
+          ? `<button class="btn-orange" onclick="mover('${p._id}','en_camino')">🛵 Salir a entregar</button>`
+          : `<button class="btn-primary" onclick="mover('${p._id}','entregado')">✔ Entregado${p.medioPago === "efectivo" && !p.pagado ? " y cobrado" : ""}</button>`}
+      </div>
+    </div>`;
+  }
+
+  async function cargar() {
+    try {
+      const pedidos = await apiGet("/orders/reparto");
+      const listos = pedidos.filter((p) => p.estado === "producido");
+      const camino = pedidos.filter((p) => p.estado === "en_camino");
+      document.getElementById("contenido").innerHTML = `
+        <div><h2>📦 Listos para retirar (${listos.length})</h2>
+          <div style="display:flex; flex-direction:column; gap:.75rem;">
+            ${listos.map(ticket).join("") || `<div class="card" style="text-align:center; opacity:.7;">No hay pedidos listos todavía.</div>`}
+          </div></div>
+        <div><h2>🛵 En camino (${camino.length})</h2>
+          <div style="display:flex; flex-direction:column; gap:.75rem;">
+            ${camino.map(ticket).join("") || `<div class="card" style="text-align:center; opacity:.7;">Nada en camino.</div>`}
+          </div></div>`;
+      document.getElementById("actualizado").textContent = "Actualizado " + new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+    } catch (err) { toast(err.message, "error"); }
+  }
+
+  async function mover(id, estado) {
+    try {
+      await apiPatch(`/orders/${id}/estado`, { estado });
+      toast(estado === "entregado" ? "Entrega registrada ✅" : "¡Buen viaje! 🛵");
+    } catch (err) { toast(err.message, "error"); }
+    await cargar();
+  }
+
+  init();
+</script>
+</body>
+</html>

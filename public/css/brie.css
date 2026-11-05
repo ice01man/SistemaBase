@@ -1,4 +1,4 @@
-/* ===== SistemaBase · estilo Brie ===== */
+/* ===== SistemaBRIE · estilo Brie ===== */
 
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap");
 
@@ -181,3 +181,54 @@ th { color: var(--brie-violet-dark); font-weight: 800; font-size: .75rem; text-t
 .db-sidebar a.activo { background: var(--brie-solid); color: #fff; }
 .db-content { flex: 1; padding: 1.5rem; min-width: 0; }
 @media (max-width: 767px) { .db-layout { flex-direction: column; } .db-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; } }
+
+
+/* ===== Avisos (toast) ===== */
+#toasts { position: fixed; top: 1rem; right: 1rem; z-index: 100; display: flex; flex-direction: column; gap: .5rem; max-width: 22rem; }
+.toast { border-radius: .75rem; padding: .65rem .9rem; font-size: .875rem; font-weight: 700; box-shadow: 0 10px 25px rgba(69,58,107,.25); background: #166534; color: #fff; }
+.toast-error { background: #b91c1c; }
+
+/* ===== Seguimiento del pedido (línea de pasos) ===== */
+.tracker { display: flex; align-items: flex-start; margin: 1rem 0 .25rem; }
+.tracker .paso { flex: 1; text-align: center; position: relative; font-size: .7rem; font-weight: 800; color: #9ca3af; }
+.tracker .paso::before { content: ""; position: absolute; top: .55rem; left: -50%; width: 100%; height: 3px; background: var(--brie-lavender-light); z-index: 0; }
+.tracker .paso:first-child::before { display: none; }
+.tracker .punto { position: relative; z-index: 1; display: block; margin: 0 auto .3rem; width: 1.2rem; height: 1.2rem; border-radius: 9999px; background: var(--brie-lavender-light); border: 2px solid var(--brie-lavender-light); }
+.tracker .paso.hecho { color: var(--brie-violet-dark); }
+.tracker .paso.hecho::before { background: var(--brie-solid); }
+.tracker .paso.hecho .punto { background: var(--brie-solid); border-color: var(--brie-solid); }
+.tracker .paso.actual .punto { background: var(--brie-orange); border-color: var(--brie-orange); box-shadow: 0 0 0 4px rgba(240,135,60,.25); }
+.tracker .paso.actual { color: var(--brie-orange-dark); }
+
+/* ===== Tableros de cocina / reparto ===== */
+.kanban { display: grid; gap: 1rem; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .kanban { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1200px) { .kanban.tres { grid-template-columns: repeat(3, 1fr); } }
+.kanban h2 { font-size: 1.05rem; font-weight: 800; color: var(--brie-violet-dark); margin: 0 0 .5rem; }
+.ticket { border-left: 5px solid var(--brie-solid); }
+.ticket.urgente { border-left-color: #dc2626; }
+.ticket.preparando { border-left-color: var(--brie-orange); }
+.ticket .cab { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.ticket .num { font-weight: 800; color: var(--brie-violet); font-size: 1.05rem; }
+.ticket .items { margin: .5rem 0; font-size: .95rem; line-height: 1.5; }
+.ticket .meta { font-size: .8rem; opacity: .75; }
+.ticket .acciones { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
+.nota { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: .6rem; padding: .35rem .6rem; font-size: .8rem; font-weight: 700; margin-top: .4rem; }
+
+/* ===== Tablero admin ===== */
+.stats { display: grid; gap: .75rem; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 900px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+.stat { background: var(--surface); border: 1px solid var(--brie-lavender-light); border-radius: 1rem; padding: .9rem 1rem; }
+.stat .valor { font-size: 1.5rem; font-weight: 800; color: var(--brie-violet-deep); }
+.stat .rotulo { font-size: .75rem; font-weight: 800; text-transform: uppercase; color: var(--brie-violet); }
+.stat.alerta .valor { color: #b91c1c; }
+.barra { height: .6rem; border-radius: 9999px; background: var(--brie-lavender-light); overflow: hidden; }
+.barra > span { display: block; height: 100%; background: var(--brie-solid); }
+.tabla-scroll { overflow-x: auto; }
+.fila-bajo td { background: #fef2f2; }
+.seccion-titulo { font-size: 1.5rem; font-weight: 800; color: var(--brie-violet-deep); margin: 0; }
+.barra-herramientas { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.form-grid { display: grid; gap: .75rem; grid-template-columns: 1fr 1fr; }
+.form-grid .ancho { grid-column: 1 / -1; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+.receta-fila { display: grid; grid-template-columns: 1fr 7rem auto; gap: .5rem; margin-bottom: .4rem; align-items: center; }

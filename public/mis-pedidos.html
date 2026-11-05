@@ -3,13 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mis pedidos · SistemaBase</title>
+<title>Mis pedidos · SistemaBRIE</title>
 <link rel="stylesheet" href="css/brie.css" />
 </head>
 <body>
 <div id="navbar"></div>
 <main class="container-md" style="padding:2.5rem 1rem;">
-  <h1 style="font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep);">Mis pedidos</h1>
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;">
+    <h1 style="font-size:1.875rem; font-weight:800; color:var(--brie-violet-deep); margin:0;">Mis pedidos</h1>
+    <span id="actualizado" style="font-size:.75rem; opacity:.6;"></span>
+  </div>
   <div id="aviso-nuevo"></div>
   <div id="lista" style="margin-top:1.5rem; display:flex; flex-direction:column; gap:1.25rem;"></div>
 </main>
@@ -21,33 +24,50 @@
   async function init() {
     const usuario = requireRol("cliente", "admin");
     if (!usuario) return;
-
     if (new URLSearchParams(location.search).get("nuevo")) {
-      document.getElementById("aviso-nuevo").innerHTML = `<div class="msg-ok" style="margin-top:1rem;">✅ ¡Pedido recibido! Acá vas a ver el estado.</div>`;
+      document.getElementById("aviso-nuevo").innerHTML = `<div class="msg-ok" style="margin-top:1rem;">✅ ¡Pedido recibido! Acá vas a ver cómo avanza.</div>`;
     }
     await cargar();
+    setInterval(cargar, 15000); // el seguimiento se actualiza solo
   }
 
   async function cargar() {
-    const pedidos = await apiGet("/orders/mis-pedidos");
-    const cont = document.getElementById("lista");
-    if (pedidos.length === 0) {
-      cont.innerHTML = `<div class="card" style="text-align:center; opacity:0.7;">Todavía no hiciste pedidos.</div>`;
-      return;
+    try {
+      const pedidos = await apiGet("/orders/mis-pedidos");
+      const cont = document.getElementById("lista");
+      cont.innerHTML = pedidos.length === 0
+        ? `<div class="card" style="text-align:center; opacity:0.7;">Todavía no hiciste pedidos. <a href="pedir.html" style="color:var(--brie-violet); font-weight:800;">Hacer el primero →</a></div>`
+        : pedidos.map(renderPedido).join("");
+      document.getElementById("actualizado").textContent = "Actualizado " + new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+    } catch (err) {
+      document.getElementById("lista").innerHTML = `<p class="msg-error">${esc(err.message)}</p>`;
     }
-    cont.innerHTML = pedidos.map(renderPedido).join("");
+  }
+
+  function renderTracker(p) {
+    if (p.estado === "cancelado") {
+      return `<p class="msg-error" style="margin:.75rem 0 0;">Pedido cancelado${p.motivoCancelacion ? ` · ${esc(p.motivoCancelacion)}` : ""}</p>`;
+    }
+    const idx = PASOS_SEGUIMIENTO.indexOf(p.estado);
+    return `<div class="tracker">${PASOS_SEGUIMIENTO.map((e, i) => `
+      <div class="paso ${i < idx ? "hecho" : i === idx ? "hecho actual" : ""}">
+        <span class="punto"></span>${esc(ESTADO_LABEL[e])}
+      </div>`).join("")}</div>`;
   }
 
   function renderPedido(p) {
+    const hist = (p.historial || []).map((h) => `${esc(ESTADO_LABEL[h.estado] ?? h.estado)} · ${fmtFechaHora(h.fecha)}`).join(" → ");
     return `
     <div class="card">
       <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.5rem; align-items:center;">
         <div>
-          <span style="font-size:0.875rem; font-weight:800; color:var(--brie-violet);">Pedido #${p._id.slice(-6)}</span>
-          <h3 style="margin:0; font-size:1rem; font-weight:800; color:var(--brie-violet-deep);">${fmtFechaHora(p.createdAt)}</h3>
+          <span style="font-size:0.875rem; font-weight:800; color:var(--brie-violet);">Pedido #${p.numero ?? p._id.slice(-6)}</span>
+          <h3 style="margin:0; font-size:1rem; font-weight:800; color:var(--brie-violet-deep);">Entrega ${fmtFechaEntrega(p.fechaEntrega)} · pedido el ${fmtFechaHora(p.createdAt)}</h3>
         </div>
-        <span class="badge" style="${ESTADO_COLOR[p.estado]}">${ESTADO_LABEL[p.estado]}</span>
+        ${badgeEstado(p.estado)}
       </div>
+
+      ${renderTracker(p)}
 
       <div style="border-top:1px solid var(--brie-lavender-light); margin-top:0.75rem; padding-top:0.75rem; font-size:0.875rem; display:flex; flex-direction:column; gap:0.25rem;">
         ${p.items.map((i) => `
@@ -58,8 +78,27 @@
         <div style="display:flex; justify-content:space-between; border-top:1px solid var(--brie-lavender-light); padding-top:0.5rem; font-size:1rem; font-weight:800; color:var(--brie-violet-deep);">
           <span>Total</span><span>${fmtPrecio(p.totalAmount)}</span>
         </div>
+        <div style="font-size:.8rem; opacity:.75; margin-top:.35rem;">
+          📍 ${esc(p.direccion)} · 💳 ${esc(MEDIO_PAGO_LABEL[p.medioPago] ?? p.medioPago)} ${p.pagado ? "· <b>Pagado ✅</b>" : ""}
+          ${p.observaciones ? `<br>📝 ${esc(p.observaciones)}` : ""}
+          ${p.repartidor && p.estado === "en_camino" ? `<br>🛵 Lo lleva ${esc(p.repartidor)}` : ""}
+        </div>
+        ${hist ? `<details style="font-size:.75rem; opacity:.75; margin-top:.25rem;"><summary style="cursor:pointer;">Historial</summary>${hist}</details>` : ""}
       </div>
+
+      ${p.puedeCancelar ? `<div style="margin-top:.75rem;"><button class="btn-danger" style="font-size:.8rem;" onclick="cancelar('${p._id}')">Cancelar pedido</button></div>` : ""}
     </div>`;
+  }
+
+  async function cancelar(id) {
+    if (!confirm("¿Cancelar este pedido?")) return;
+    try {
+      await apiPost(`/orders/${id}/cancelar`, { motivo: "Cancelado por el cliente" });
+      toast("Pedido cancelado");
+      await cargar();
+    } catch (err) {
+      toast(err.message, "error");
+    }
   }
 
   init();

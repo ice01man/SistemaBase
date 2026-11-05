@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cocina y producción · SistemaBRIE</title>
+<link rel="stylesheet" href="css/brie.css" />
+</head>
+<body>
+<div id="navbar"></div>
+<main class="container" style="padding:2rem 1rem;">
+  <div class="barra-herramientas">
+    <h1 class="seccion-titulo">Cocina y producción</h1>
+    <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+      <span id="actualizado" style="font-size:.75rem; opacity:.6;"></span>
+      <button class="btn-outline" onclick="recargar()">↻ Actualizar</button>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap;">
+    <button class="chip activo" data-tab="pedidos" onclick="verTab('pedidos')">🍳 Pedidos</button>
+    <button class="chip" data-tab="lista" onclick="verTab('lista')">📋 Lista de producción</button>
+    <button class="chip" data-tab="stock" onclick="verTab('stock')">📦 Stock de insumos <span id="badge-alertas"></span></button>
+  </div>
+
+  <section id="tab-pedidos" style="margin-top:1.25rem;"></section>
+  <section id="tab-lista" style="margin-top:1.25rem; display:none;"></section>
+  <section id="tab-stock" style="margin-top:1.25rem; display:none;"></section>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+  let usuario = null;
+  let puedeStock = false;       // admin y producción mueven stock; el empleado general solo mira
+  let tabActual = "pedidos";
+  let fechaLista = hoyISO();
+  let fechaElegida = false;     // si el usuario no tocó la fecha, se abre en el próximo día con pedidos
+
+  async function init() {
+    usuario = requireRol("admin", "produccion", "user");
+    if (!usuario) return;
+    puedeStock = ["admin", "produccion"].includes(usuario.role);
+    await recargar();
+    setInterval(() => { if (tabActual === "pedidos") cargarPedidos(); }, 20000);
+  }
+
+  function verTab(t) {
+    tabActual = t;
+    document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("activo", b.dataset.tab === t));
+    for (const id of ["pedidos", "lista", "stock"]) document.getElementById(`tab-${id}`).style.display = id === t ? "block" : "none";
+    recargar();
+  }
+
+  async function recargar() {
+    try {
+      if (tabActual === "pedidos") await cargarPedidos();
+      if (tabActual === "lista") await cargarLista();
+      if (tabActual === "stock") await cargarStock();
+      cargarBadge();
+      document.getElementById("actualizado").textContent = "Actualizado " + new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+    } catch (err) { toast(err.message, "error"); }
+  }
+
+  async function cargarBadge() {
+    try {
+      const a = await apiGet("/insumos/alertas");
+      document.getElementById("badge-alertas").innerHTML = a.length ? `<span class="badge" style="background:#fee2e2;color:#b91c1c;">${a.length}</span>` : "";
+    } catch { /* no crítico */ }
+  }
+
+  // ───────────── Pedidos ─────────────
+  function itemsHtml(p) { return p.items.map((i) => `<div><b>${i.qty} ×</b> ${esc(i.name)}</div>`).join(""); }
+
+  function ticket(p) {
+    const hoy = hoyISO();
+    const urgente = p.fechaEntrega <= hoy;
+    const nuevo = p.estado === "confirmado";
+    return `
+    <div class="card ticket ${nuevo ? (urgente ? "urgente" : "") : "preparando"}">
+      <div class="cab">
+        <span class="num">#${p.numero ?? p._id.slice(-6)}</span>
+        <span class="meta">${p.fechaEntrega === hoy ? "<b>HOY</b>" : fmtFechaEntrega(p.fechaEntrega)} · ${fmtFechaHora(p.createdAt)}</span>
+      </div>
+      <div class="items">${itemsHtml(p)}</div>
+      ${p.observaciones ? `<div class="nota">📝 ${esc(p.observaciones)}</div>` : ""}
+      <div class="acciones">
+        <span class="meta">${esc(p.cliente?.nombre ?? "")}${p.tomadoPor && !nuevo ? ` · tomado por ${esc(p.tomadoPor)}` : ""}</span>
+        ${nuevo
+          ? `<button class="btn-orange" onclick="mover('${p._id}','en_preparacion')">Tomar pedido</button>`
+          : `<button class="btn-primary" onclick="mover('${p._id}','producido')">✔ Marcar listo</button>`}
+      </div>
+    </div>`;
+  }
+
+  async function cargarPedidos() {
+    const pedidos = await apiGet("/orders/cocina");
+    const nuevos = pedidos.filter((p) => p.estado === "confirmado").sort((a, b) => a.fechaEntrega.localeCompare(b.fechaEntrega) || a.numero - b.numero);
+    const prep = pedidos.filter((p) => p.estado === "en_preparacion");
+    document.getElementById("tab-pedidos").innerHTML = `
+      <div class="kanban">
+        <div><h2>🕐 Nuevos (${nuevos.length})</h2>
+          <div style="display:flex; flex-direction:column; gap:.75rem;">
+            ${nuevos.map(ticket).join("") || `<div class="card" style="text-align:center; opacity:.7;">No hay pedidos nuevos. 🎉</div>`}
+          </div></div>
+        <div><h2>👩‍🍳 En preparación (${prep.length})</h2>
+          <div style="display:flex; flex-direction:column; gap:.75rem;">
+            ${prep.map(ticket).join("") || `<div class="card" style="text-align:center; opacity:.7;">Nada en preparación.</div>`}
+          </div></div>
+      </div>`;
+  }
+
+  async function mover(id, estado) {
+    try {
+      await apiPatch(`/orders/${id}/estado`, { estado });
+      await cargarPedidos();
+    } catch (err) { toast(err.message, "error"); await cargarPedidos(); }
+  }
+
+  // ───────────── Lista de producción ─────────────
+  async function cargarLista() {
+    if (!fechaElegida) {
+      const abiertos = await apiGet("/orders/cocina");
+      const fechas = abiertos.map((p) => p.fechaEntrega).sort();
+      if (fechas.length) fechaLista = fechas[0];
+    }
+    const d = await apiGet(`/produccion/lista?fecha=${fechaLista}`);
+    const hayFalta = d.insumos.some((i) => i.faltante > 0);
+    document.getElementById("tab-lista").innerHTML = `
+      <div class="barra-herramientas" style="margin-bottom:1rem;">
+        <div style="display:flex; gap:.5rem; align-items:center;">
+          <label class="label" style="margin:0;">Fecha de entrega</label>
+          <input class="input" type="date" value="${fechaLista}" style="width:auto;" onchange="fechaLista=this.value; fechaElegida=true; cargarLista()" />
+        </div>
+        ${puedeStock
+          ? `<button class="btn-orange" onclick="ejecutarCorte()" ${d.pedidosPendientesDeDescuento === 0 ? "disabled" : ""}>⏱ Ejecutar corte (${d.pedidosPendientesDeDescuento} pedidos)</button>`
+          : ""}
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="valor">${d.pedidos}</div><div class="rotulo">Pedidos</div></div>
+        <div class="stat"><div class="valor">${d.platos.reduce((a, p) => a + p.qty, 0)}</div><div class="rotulo">Porciones</div></div>
+        <div class="stat"><div class="valor">${d.corteEjecutado ? "Sí ✅" : "No"}</div><div class="rotulo">Corte ejecutado</div></div>
+        <div class="stat ${hayFalta ? "alerta" : ""}"><div class="valor">${d.insumos.filter((i) => i.faltante > 0).length}</div><div class="rotulo">Insumos faltantes</div></div>
+      </div>
+      ${d.sinReceta.length ? `<p class="nota" style="margin-top:1rem;">⚠️ Sin receta cargada (no descuentan stock): ${d.sinReceta.map(esc).join(", ")}</p>` : ""}
+      <div class="grid-2" style="margin-top:1rem; align-items:start;">
+        <div class="card"><h3 style="margin:0 0 .5rem;">🍽️ Qué cocinar</h3>
+          <table><thead><tr><th>Plato</th><th>Porciones</th><th>Pedidos</th></tr></thead><tbody>
+          ${d.platos.map((p) => `<tr><td>${esc(p.name)}</td><td><b>${p.qty}</b></td><td>${p.pedidos}</td></tr>`).join("") || `<tr><td colspan="3" style="opacity:.6;">No hay pedidos para esta fecha.</td></tr>`}
+          </tbody></table></div>
+        <div class="card"><h3 style="margin:0 0 .5rem;">📦 Insumos necesarios</h3>
+          <div class="tabla-scroll"><table><thead><tr><th>Insumo</th><th>Necesario</th><th>Stock</th><th>Falta</th></tr></thead><tbody>
+          ${d.insumos.map((i) => `<tr class="${i.faltante > 0 ? "fila-bajo" : ""}"><td>${esc(i.nombre)}</td><td>${fmtNum(i.necesario_total)} ${i.unidad}</td><td>${fmtNum(i.stock_actual)}</td><td>${i.faltante > 0 ? `<b style="color:#b91c1c;">${fmtNum(i.faltante)}</b>` : "—"}</td></tr>`).join("") || `<tr><td colspan="4" style="opacity:.6;">—</td></tr>`}
+          </tbody></table></div></div>
+      </div>`;
+  }
+
+  async function ejecutarCorte() {
+    if (!confirm(`¿Ejecutar el corte del ${fechaLista}? Se descuenta el stock de los insumos de estos pedidos.`)) return;
+    try {
+      const r = await apiPost("/produccion/corte", { fecha: fechaLista });
+      toast(`Corte listo: ${r.pedidosProcesados} pedidos${r.faltantes.length ? ` · ⚠️ faltaron ${r.faltantes.length} insumos` : ""}`, r.faltantes.length ? "error" : "ok");
+      await recargar();
+    } catch (err) { toast(err.message, "error"); }
+  }
+
+  // ───────────── Stock ─────────────
+  async function cargarStock() {
+    const insumos = await apiGet("/insumos");
+    document.getElementById("tab-stock").innerHTML = `
+      <div id="form-mov"></div>
+      <div class="card tabla-scroll"><table>
+        <thead><tr><th>Insumo</th><th>Stock</th><th>Mínimo</th><th>Estado</th><th></th></tr></thead>
+        <tbody>${insumos.map((i) => `
+          <tr class="${i.bajoMinimo ? "fila-bajo" : ""}">
+            <td>${esc(i.nombre)}</td>
+            <td><b>${fmtNum(i.stock_actual)}</b> ${i.unidad}</td>
+            <td>${fmtNum(i.stock_minimo)} ${i.unidad}</td>
+            <td>${i.activo === false ? "Inactivo" : i.bajoMinimo ? `<span class="badge" style="background:#fee2e2;color:#b91c1c;">Bajo mínimo</span>` : `<span class="badge" style="background:#dcfce7;color:#166534;">OK</span>`}</td>
+            <td>${puedeStock ? `<button class="btn-ghost" style="font-size:.75rem;" onclick="abrirMov('${i._id}','${esc(i.nombre)}','${i.unidad}')">Movimiento</button>` : ""}</td>
+          </tr>`).join("")}</tbody></table></div>`;
+  }
+
+  function abrirMov(id, nombre, unidad) {
+    document.getElementById("form-mov").innerHTML = `
+      <form class="card" style="margin-bottom:1rem; display:grid; gap:.6rem; grid-template-columns: repeat(4, 1fr);" onsubmit="guardarMov(event,'${id}')">
+        <div style="grid-column:1/-1; font-weight:800;">Movimiento de stock · ${nombre}</div>
+        <div><label class="label">Tipo</label>
+          <select class="input" name="tipo"><option value="ingreso">Ingreso (compra)</option><option value="egreso">Egreso (merma / vencido)</option><option value="ajuste">Ajuste (conteo real)</option></select></div>
+        <div><label class="label">Cantidad (${unidad})</label><input class="input" name="cantidad" type="number" step="0.001" min="0" required /></div>
+        <div style="grid-column: span 2;"><label class="label">Motivo</label><input class="input" name="motivo" maxlength="200" placeholder="Compra proveedor, vencido, conteo..." /></div>
+        <div style="grid-column:1/-1; display:flex; gap:.5rem;">
+          <button class="btn-primary" type="submit">Guardar</button>
+          <button class="btn-ghost" type="button" onclick="document.getElementById('form-mov').innerHTML=''">Cancelar</button>
+        </div>
+      </form>`;
+    document.getElementById("form-mov").scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function guardarMov(e, id) {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    try {
+      await apiPost(`/insumos/${id}/movimiento`, { tipo: fd.tipo, cantidad: Number(fd.cantidad), motivo: fd.motivo });
+      toast("Stock actualizado");
+      document.getElementById("form-mov").innerHTML = "";
+      await recargar();
+    } catch (err) { toast(err.message, "error"); }
+  }
+
+  init();
+</script>
+</body>
+</html>

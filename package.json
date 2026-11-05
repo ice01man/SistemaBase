@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
+    "seed": "node seed.js",
+    "rol": "node scripts/cambiar-rol.js"
   },
   "keywords": [],
   "author": "",

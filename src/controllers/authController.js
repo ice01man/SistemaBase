@@ -1,84 +1,52 @@
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import User from '../models/User.js';
-import { getModo } from '../config/modo.js';
-import * as memoria from '../config/memoria.js';
+import { db } from '../store/index.js';
+import { firmarToken } from '../middleware/auth.js';
+import { PRODUCCION } from '../config/env.js';
+import { badRequest, noAutorizado } from '../utils/errores.js';
+import { comparar, crearUsuario, actualizarUsuario, publico } from '../services/usuarios.js';
 
-const SECRET = process.env.JWT_SECRET || 'dev_secret';
+const HASH_FALSO = bcrypt.hashSync('no-es-una-clave', 10); // para igualar tiempos cuando el email no existe
 
-const firmarToken = (u) =>
-  jwt.sign({ id: u.id || u._id, rol: u.rol, email: u.email }, SECRET, { expiresIn: '8h' });
-
-// Además del token en el body (que el front guarda en localStorage para las llamadas a la API),
-// dejamos el mismo JWT en una cookie httpOnly. Sirve para que las páginas privadas (admin, panel)
-// se puedan verificar del lado del servidor ANTES de mandar el HTML, sin depender de JS del cliente.
+// Además del token en el body (el front lo guarda en localStorage para la API), se deja el mismo
+// JWT en una cookie httpOnly: sirve para que las páginas privadas se verifiquen en el servidor.
 const setCookieSesion = (res, token) => {
-  res.cookie('sb_token', token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 8 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === 'production',
-  });
+  res.cookie('sb_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 8 * 60 * 60 * 1000, secure: PRODUCCION });
 };
 
 export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'Faltan credenciales' });
-
-    // --- MODO LOCAL (valida contra el seed) ---
-    if (getModo() !== 'mongo') {
-      const u = memoria.findUserByEmail(email);
-      if (!u || u.password !== password) return res.status(401).json({ error: 'Credenciales inválidas' });
-      const { password: _, ...safe } = u;
-      const token = firmarToken(u);
-      setCookieSesion(res, token);
-      return res.json({ token, user: safe });
-    }
-
-    // --- MODO MONGO ---
-    const u = await User.findOne({ email });
-    if (!u) return res.status(401).json({ error: 'Credenciales inválidas' });
-    const ok = await bcrypt.compare(password, u.passwordHash);
-    if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
-    const token = firmarToken(u);
-    setCookieSesion(res, token);
-    return res.json({
-      token,
-      user: { id: u._id, name: u.nombre, email: u.email, role: u.rol },
-    });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  const { email, password } = req.body ?? {};
+  // Tienen que ser texto: si llega un objeto ({"$ne": ""}) se rechaza (inyección NoSQL).
+  if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
+    throw badRequest('Faltan credenciales.');
+  }
+  const u = await db.users.findOne({ email: email.trim().toLowerCase() });
+  const ok = await comparar(password, u?.passwordHash ?? HASH_FALSO);
+  if (!u || !ok || u.activo === false) throw noAutorizado('Credenciales inválidas');
+  const token = firmarToken(u);
+  setCookieSesion(res, token);
+  res.json({ token, user: publico(u) });
 };
 
-// Alta pública: cualquiera puede crear su cuenta de cliente (a diferencia de
-// POST /api/users, que crea usuarios de cualquier rol y exige estar logueado).
+// Alta pública: crea SIEMPRE un cliente (el rol no se puede elegir desde acá).
 export const register = async (req, res) => {
-  try {
-    const { nombre, email, password, direccion } = req.body;
-    if (!nombre || !email || !password) return res.status(400).json({ error: 'Completá nombre, email y contraseña.' });
-    if (String(password).length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
-
-    if (getModo() !== 'mongo') {
-      if (memoria.findUserByEmail(email)) return res.status(409).json({ error: 'Ya existe una cuenta con ese email.' });
-      const u = memoria.createUser({ nombre, email, password, rol: 'cliente', direccion });
-      const token = firmarToken({ id: u.id, rol: u.rol, email: u.email });
-      setCookieSesion(res, token);
-      return res.status(201).json({ token, user: u });
-    }
-
-    if (await User.findOne({ email })) return res.status(409).json({ error: 'Ya existe una cuenta con ese email.' });
-    const saved = await new User({ nombre, email, passwordHash: password, rol: 'cliente', direccion }).save();
-    const token = firmarToken(saved);
-    setCookieSesion(res, token);
-    return res.status(201).json({
-      token,
-      user: { id: saved._id, name: saved.nombre, email: saved.email, role: saved.rol },
-    });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  const { nombre, email, password, direccion, telefono } = req.body ?? {};
+  const u = await crearUsuario({ nombre, email, password, rol: 'cliente', direccion, telefono });
+  const token = firmarToken({ _id: u._id, rol: u.rol, email: u.email });
+  setCookieSesion(res, token);
+  res.status(201).json({ token, user: u });
 };
 
-// Limpia la cookie de sesión (el localStorage lo borra el propio front).
 export const logout = (_req, res) => {
   res.clearCookie('sb_token');
   res.json({ ok: true });
+};
+
+export const me = async (req, res) => {
+  res.json(publico(await db.users.get(req.usuario.id)));
+};
+
+// El propio usuario edita nombre/dirección/teléfono/contraseña (nunca su rol).
+export const updateMe = async (req, res) => {
+  const { nombre, direccion, telefono, password } = req.body ?? {};
+  res.json(await actualizarUsuario(req.usuario.id, { nombre, direccion, telefono, password }, { esAdmin: false }));
 };

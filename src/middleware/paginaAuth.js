@@ -1,12 +1,8 @@
-import jwt from 'jsonwebtoken';
+import { verificarToken } from './auth.js';
+import { db } from '../store/index.js';
 
-const SECRET = process.env.JWT_SECRET || 'dev_secret';
-
-/**
- * Parsea el header Cookie a mano (no agregamos cookie-parser como dependencia
- * nueva solo para esto). Alcanza con encontrar "sb_token=...".
- */
-function leerCookie(req, nombre) {
+/** Lee la cookie "sb_token" a mano (sin sumar cookie-parser). */
+export function leerCookie(req, nombre) {
   const header = req.headers.cookie;
   if (!header) return null;
   const match = header.split(';').map((c) => c.trim()).find((c) => c.startsWith(`${nombre}=`));
@@ -14,19 +10,19 @@ function leerCookie(req, nombre) {
 }
 
 /**
- * Gatekeeper de páginas HTML privadas (admin, panel, etc.): verifica el rol
- * ANTES de mandar el archivo, a diferencia de servirlo como estático desde
- * /public (donde cualquiera puede pedir el .html directamente). Si no hay
- * sesión válida, redirige a login.html en vez de devolver la página.
+ * Gatekeeper de páginas HTML privadas: verifica sesión y rol ANTES de mandar el archivo.
+ * Sin sesión válida (o usuario desactivado) redirige a login.html.
  */
 export function paginaRequiereRol(...roles) {
-  return (req, res, next) => {
-    const token = leerCookie(req, 'sb_token');
-    if (!token) return res.redirect('/login.html');
+  return async (req, res, next) => {
     try {
-      const payload = jwt.verify(token, SECRET);
-      if (roles.length && !roles.includes(payload.rol)) return res.redirect('/login.html');
-      req.usuario = payload;
+      const token = leerCookie(req, 'sb_token');
+      if (!token) return res.redirect('/login.html');
+      const payload = verificarToken(token);
+      const u = await db.users.get(payload.id);
+      if (!u || u.activo === false) return res.redirect('/login.html');
+      if (roles.length && !roles.includes(u.rol)) return res.redirect('/login.html');
+      req.usuario = { id: String(u._id), rol: u.rol, email: u.email, nombre: u.nombre };
       next();
     } catch {
       return res.redirect('/login.html');

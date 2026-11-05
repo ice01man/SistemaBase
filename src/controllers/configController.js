@@ -1,38 +1,32 @@
-import Config from '../models/Config.js';
+import { db, obtenerConfig } from '../store/index.js';
+import { badRequest } from '../utils/errores.js';
+import { fechasDeEntrega } from '../services/pedidos.js';
 
-const USA_MONGO = process.env.PERSISTENCIA === 'mongo';
-let temaMemoria = 'violeta'; // fallback cuando corrés sin base
+const TEMAS = ['violeta', 'trueno', 'bosque'];
 
-// GET /api/config → público, lo lee el front al cargar
-export const getConfig = async (req, res) => {
-  try {
-    if (!USA_MONGO) return res.json({ tema: temaMemoria });
-    let cfg = await Config.findOne({ clave: 'sitio' });
-    if (!cfg) cfg = await Config.create({ clave: 'sitio' });
-    res.json({ tema: cfg.tema });
-  } catch (e) {
-    console.error('❌ getConfig:', e);
-    res.status(500).json({ error: 'No se pudo leer la configuración' });
-  }
+// GET /api/config → público: el front lo lee al cargar (tema y hora de corte)
+export const getConfig = async (_req, res) => {
+  const cfg = await obtenerConfig();
+  res.json({ tema: cfg.tema, horaCorte: cfg.horaCorte });
 };
+
+// GET /api/config/entregas → público: fecha de entrega de cada día del menú
+export const getEntregas = async (_req, res) => res.json(await fechasDeEntrega());
 
 // PATCH /api/config → solo admin
 export const updateConfig = async (req, res) => {
-  try {
-    const { tema } = req.body;
-    if (!['violeta', 'trueno', 'bosque'].includes(tema)) {
-      return res.status(400).json({ error: 'Tema inválido' });
-    }
-    if (!USA_MONGO) {           // modo memoria: guardo en RAM
-      temaMemoria = tema;
-      return res.json({ tema: temaMemoria });
-    }
-    const cfg = await Config.findOneAndUpdate(
-      { clave: 'sitio' }, { tema }, { new: true, upsert: true }
-    );
-    res.json({ tema: cfg.tema });
-  } catch (e) {
-    console.error('❌ updateConfig:', e);
-    res.status(500).json({ error: 'No se pudo guardar la configuración' });
+  const { tema, horaCorte } = req.body ?? {};
+  const patch = {};
+  if (tema !== undefined) {
+    if (!TEMAS.includes(tema)) throw badRequest('Tema inválido');
+    patch.tema = tema;
   }
+  if (horaCorte !== undefined) {
+    const h = Number(horaCorte);
+    if (!Number.isInteger(h) || h < 0 || h > 23) throw badRequest('La hora de corte debe ser un entero entre 0 y 23.');
+    patch.horaCorte = h;
+  }
+  const cfg = await obtenerConfig();
+  const upd = await db.config.update(cfg._id, patch);
+  res.json({ tema: upd.tema, horaCorte: upd.horaCorte });
 };

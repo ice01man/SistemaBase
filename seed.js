@@ -1,23 +1,38 @@
+// Carga inicial de MongoDB.
+//   npm run seed                → crea el usuario admin si no existe
+//   npm run seed -- --demo      → además crea insumos, platos con receta y usuarios de prueba
+// La contraseña del admin sale de SEED_ADMIN_PASSWORD; si no la definís, se genera una al azar y se
+// imprime UNA vez (no hay más contraseñas fijas tipo "admin123" en la base real).
 import 'dotenv/config';
+import crypto from 'node:crypto';
 import mongoose from 'mongoose';
-import User from './src/models/User.js';
+import { iniciarStore, db, cargarDemo } from './src/store/index.js';
+import { crearUsuario } from './src/services/usuarios.js';
+import { MODO } from './src/config/env.js';
 
-const run = async () => {
-  await mongoose.connect(process.env.MONGODB_URI, { dbName: 'SistemaBase' });
+if (MODO !== 'mongo') {
+  console.error('El seed es para MongoDB: poné PERSISTENCIA=mongo en tu .env.');
+  process.exit(1);
+}
 
-  const existe = await User.findOne({ email: 'admin@demo.com' });
-  if (existe) {
-    console.log('El admin ya existe, no hago nada.');
-  } else {
-    await User.create({
-      nombre: 'Admin',
-      email: 'admin@demo.com',
-      passwordHash: 'admin123',   // ← TEXTO PLANO: el pre('save') lo hashea solo
-      rol: 'admin'
-    });
-    console.log('✅ Admin creado: admin@demo.com / admin123');
-  }
-  await mongoose.disconnect();
-};
+const demo = process.argv.includes('--demo');
+await iniciarStore();
 
-run().catch(e => { console.error(e); process.exit(1); });
+const email = (process.env.SEED_ADMIN_EMAIL || 'admin@brie.local').toLowerCase();
+if (await db.users.findOne({ email })) {
+  console.log(`El admin ${email} ya existe, no hago nada con usuarios.`);
+} else {
+  const password = process.env.SEED_ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
+  await crearUsuario({ nombre: 'Administrador', email, password, rol: 'admin' });
+  console.log(`✅ Admin creado: ${email}`);
+  if (!process.env.SEED_ADMIN_PASSWORD) console.log(`   Contraseña (anotala, no se vuelve a mostrar): ${password}`);
+}
+
+if (demo) {
+  await cargarDemo();
+  console.log('✅ Datos demo cargados (insumos, platos con receta, usuarios demo si la colección estaba vacía).');
+  console.log('   Usuarios demo: admin@demo.com / admin123, produccion@demo.com / produccion123, reparto@demo.com / reparto123, cliente@demo.com / cliente123');
+  console.log('   ⚠️  Son SOLO para desarrollo: borralos antes de salir a producción.');
+}
+
+await mongoose.disconnect();
