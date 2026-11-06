@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authRequired, requireRol, ROLES_COCINA, ROLES_REPARTO, ROLES_STAFF } from '../middleware/auth.js';
 import {
-  createOrder, getMisPedidos, getPedido, cancelarPedido, getFechasEntrega,
+  createOrder, cotizarOrder, getMisPedidos, getPedido, cancelarPedido, getFechasEntrega,
   getCocina, getReparto, getTodos, patchEstado, patchPago,
 } from '../controllers/orderController.js';
 
@@ -9,6 +9,7 @@ const router = Router();
 
 // Cliente (el admin también puede pedir)
 router.post('/', authRequired, requireRol('cliente', 'admin'), createOrder);
+router.post('/cotizar', authRequired, requireRol('cliente', 'admin'), cotizarOrder);
 router.get('/mis-pedidos', authRequired, requireRol('cliente', 'admin'), getMisPedidos);
 router.get('/fechas', getFechasEntrega); // público: fecha de entrega de cada día
 

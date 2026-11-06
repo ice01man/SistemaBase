@@ -13,6 +13,10 @@ const usuarioSchema = new mongoose.Schema({
   lat:          { type: Number, default: null },
   lng:          { type: Number, default: null },
   activo:       { type: Boolean, default: true },
+  empresa:      { type: String, trim: true, default: '' },          // nombre de la empresa (si es cliente empresa)
+  zona:         { type: String, default: '' },                     // zona de entrega del CLIENTE ('' = sin asignar)
+  zonasReparto: { type: [String], default: undefined },            // zonas que cubre un REPARTIDOR
+  tipoCliente:  { type: String, enum: ['final', 'empresa', 'descuento'], default: 'final' }, // decide qué precio de la lista se le cobra
 }, { timestamps: true });
 
 // OJO: el hash de la contraseña se hace en src/services/usuarios.js (igual en modo mongo y

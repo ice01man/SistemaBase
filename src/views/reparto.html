@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Entregas · SistemaBRIE</title>
+<title>Entregas · Sistema BRIE</title>
 <link rel="stylesheet" href="css/brie.css" />
 </head>
 <body>
@@ -16,6 +16,7 @@
       <button class="btn-outline" onclick="cargar()">↻ Actualizar</button>
     </div>
   </div>
+  <div id="mis-zonas" style="margin-top:.75rem; font-size:.9rem;"></div>
   <div id="contenido" class="kanban" style="margin-top:1.25rem;"></div>
 </main>
 
@@ -45,25 +46,33 @@
       </div>
       <div class="items">${p.items.map((i) => `<div><b>${i.qty} ×</b> ${esc(i.name)}</div>`).join("")}</div>
       <div style="font-size:.9rem;">
+        ${p.zona ? `<span class="badge" style="background:#e0f2fe;color:#075985;">🗺️ ${esc(p.zona)}</span><br>` : ""}
         👤 <b>${esc(p.cliente?.nombre ?? "")}</b>${p.cliente?.telefono ? ` · <a href="tel:${esc(p.cliente.telefono)}" style="color:var(--brie-violet); font-weight:800;">${esc(p.cliente.telefono)}</a>` : ""}<br>
         📍 <a href="${mapaUrl(p.direccion)}" target="_blank" rel="noopener" style="color:var(--brie-violet); font-weight:800; text-decoration:underline;">${esc(p.direccion)}</a>
       </div>
       ${p.observaciones ? `<div class="nota">📝 ${esc(p.observaciones)}</div>` : ""}
       <div class="nota" style="background:${p.pagado || p.medioPago === "transferencia" ? "#f0fdf4" : "#fffbeb"};">
-        💳 ${esc(MEDIO_PAGO_LABEL[p.medioPago])} · ${p.pagado ? "ya pagado ✅" : p.medioPago === "efectivo" ? `<b>cobrar ${fmtPrecio(p.totalAmount)}</b>` : `verificar transferencia de ${fmtPrecio(p.totalAmount)}`}
+        💳 ${esc(MEDIO_PAGO_LABEL[p.medioPago])} · ${p.pagado ? "ya cobrado ✅" : p.medioPago === "efectivo" ? `<b>cobrar ${fmtPrecio(p.totalAmount)} en efectivo</b>` : `verificar transferencia de ${fmtPrecio(p.totalAmount)}`}
       </div>
       <div class="acciones">
         <span class="meta">${listo ? "Esperando repartidor" : `Lo lleva ${esc(p.repartidor ?? "")}`}</span>
         ${listo
           ? `<button class="btn-orange" onclick="mover('${p._id}','en_camino')">🛵 Salir a entregar</button>`
-          : `<button class="btn-primary" onclick="mover('${p._id}','entregado')">✔ Entregado${p.medioPago === "efectivo" && !p.pagado ? " y cobrado" : ""}</button>`}
+          : `${p.medioPago === "efectivo" && !p.pagado ? `<button class="btn-orange" onclick="cobrar('${p._id}')">💵 Cobré ${fmtPrecio(p.totalAmount)}</button>` : ""}
+             <button class="btn-primary" onclick="mover('${p._id}','entregado', ${p.medioPago === "efectivo" && !p.pagado})">✔ Entregado</button>`}
       </div>
     </div>`;
   }
 
   async function cargar() {
     try {
-      const pedidos = await apiGet("/orders/reparto");
+      const [pedidos, yo, cfg] = await Promise.all([apiGet("/orders/reparto"), apiGet("/auth/me"), apiGet("/config")]);
+      // Si hay zonas creadas, el repartidor solo ve las suyas: se le muestra cuáles son (o que todavía no tiene).
+      const reparte = yo.role === "reparto" || yo.role === "user";
+      const zonasMias = yo.zonasReparto || [];
+      document.getElementById("mis-zonas").innerHTML = !reparte || !(cfg.zonas || []).length ? ""
+        : zonasMias.length ? `🗺️ Tus zonas: <b>${zonasMias.map(esc).join(", ")}</b>`
+        : `<b>⚠️ Todavía no tenés zonas asignadas.</b> Pedile al administrador que te asigne las zonas que repartís: hasta entonces no vas a ver pedidos.`;
       const listos = pedidos.filter((p) => p.estado === "producido");
       const camino = pedidos.filter((p) => p.estado === "en_camino");
       document.getElementById("contenido").innerHTML = `
@@ -79,10 +88,22 @@
     } catch (err) { toast(err.message, "error"); }
   }
 
-  async function mover(id, estado) {
+  // `efectivoSinCobrar`: si entrega un pedido en efectivo sin haber registrado el cobro, se le avisa (no se le impide).
+  async function mover(id, estado, efectivoSinCobrar = false) {
+    if (estado === "entregado" && efectivoSinCobrar &&
+        !confirm("Todavía no registraste el cobro en efectivo de este pedido.\n\n¿Marcarlo como entregado igual? Va a quedar como \"A cobrar en efectivo\" para que se confirme después.")) return;
     try {
       await apiPatch(`/orders/${id}/estado`, { estado });
       toast(estado === "entregado" ? "Entrega registrada ✅" : "¡Buen viaje! 🛵");
+    } catch (err) { toast(err.message, "error"); }
+    await cargar();
+  }
+
+  // El repartidor registra que cobró el efectivo (queda guardado quién y cuándo). Es independiente de la entrega.
+  async function cobrar(id) {
+    try {
+      await apiPatch(`/orders/${id}/pago`, { pagado: true });
+      toast("Cobro en efectivo registrado 💵");
     } catch (err) { toast(err.message, "error"); }
     await cargar();
   }

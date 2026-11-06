@@ -10,26 +10,26 @@ export const USUARIOS_DEMO = [
     direccion: 'Av. Libertador 1234, Merlo', telefono: '1155550000' },
 ];
 
-// [nombre, unidad, stock_actual, stock_minimo, costo_unitario]
+// [nombre, unidad, stock_actual, stock_minimo, costo_unitario, categoria]
 export const INSUMOS_DEMO = [
-  ['Lomo', 'kg', 20, 5, 14000],
-  ['Papas', 'kg', 80, 15, 900],
-  ['Vino tinto', 'l', 10, 2, 3500],
-  ['Carne para milanesa', 'kg', 30, 8, 9000],
-  ['Pan rallado', 'kg', 10, 2, 1200],
-  ['Huevos', 'u', 120, 30, 180],
-  ['Berenjenas', 'kg', 25, 6, 1500],
-  ['Salsa pomodoro', 'l', 15, 4, 2200],
-  ['Queso vegetal', 'kg', 8, 2, 7000],
-  ['Pollo', 'kg', 30, 8, 5200],
-  ['Palta', 'kg', 10, 3, 4500],
-  ['Pan artesanal', 'u', 150, 40, 450],
-  ['Arroz arborio', 'kg', 15, 4, 3800],
-  ['Hongos', 'kg', 8, 2, 6500],
-  ['Lentejas', 'kg', 12, 3, 2400],
-  ['Verduras de estación', 'kg', 40, 10, 1300],
-  ['Roast beef', 'kg', 12, 3, 12000],
-  ['Envases', 'u', 400, 100, 120],
+  ['Lomo', 'kg', 20, 5, 14000, 'Carnes'],
+  ['Papas', 'kg', 80, 15, 900, 'Verduras'],
+  ['Vino tinto', 'l', 10, 2, 3500, 'Almacén'],
+  ['Carne para milanesa', 'kg', 30, 8, 9000, 'Carnes'],
+  ['Pan rallado', 'kg', 10, 2, 1200, 'Almacén'],
+  ['Huevos', 'u', 120, 30, 180, 'Almacén'],
+  ['Berenjenas', 'kg', 25, 6, 1500, 'Verduras'],
+  ['Salsa pomodoro', 'l', 15, 4, 2200, 'Almacén'],
+  ['Queso vegetal', 'kg', 8, 2, 7000, 'Lácteos'],
+  ['Pollo', 'kg', 30, 8, 5200, 'Carnes'],
+  ['Palta', 'kg', 10, 3, 4500, 'Frutas'],
+  ['Pan artesanal', 'u', 150, 40, 450, 'Almacén'],
+  ['Arroz arborio', 'kg', 15, 4, 3800, 'Almacén'],
+  ['Hongos', 'kg', 8, 2, 6500, 'Verduras'],
+  ['Lentejas', 'kg', 12, 3, 2400, 'Almacén'],
+  ['Verduras de estación', 'kg', 40, 10, 1300, 'Verduras'],
+  ['Roast beef', 'kg', 12, 3, 12000, 'Carnes'],
+  ['Envases', 'u', 400, 100, 120, 'Envases'],
 ];
 
 const IMG = 'https://cuidateplus.marca.com/sites/default/files/styles/natural/public/cms/2022-09/plato-unico.jpg.webp?itok=nKZXAkku';

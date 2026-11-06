@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mis pedidos · SistemaBRIE</title>
+<title>Mis pedidos · Sistema BRIE</title>
 <link rel="stylesheet" href="css/brie.css" />
 </head>
 <body>
@@ -75,6 +75,9 @@
             <span>${i.qty} × ${esc(i.name)}</span>
             <span style="font-weight:800;">${fmtPrecio(i.qty * i.price)}</span>
           </div>`).join("")}
+        ${p.descuentoPct > 0 ? `
+          <div class="linea-desc sutil"><span>Subtotal a precio público</span><span>${fmtPrecio(p.subtotal)}</span></div>
+          <div class="linea-desc"><span>🏷 ${esc(p.descuentoMotivo)}</span><span>− ${fmtPrecio(p.descuentoMonto)}</span></div>` : ""}
         <div style="display:flex; justify-content:space-between; border-top:1px solid var(--brie-lavender-light); padding-top:0.5rem; font-size:1rem; font-weight:800; color:var(--brie-violet-deep);">
           <span>Total</span><span>${fmtPrecio(p.totalAmount)}</span>
         </div>

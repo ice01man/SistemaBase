@@ -28,6 +28,11 @@ async function cargarResumen() {
       <div class="stat"><div class="valor">${fmtPrecio(r.porCobrar)}</div><div class="rotulo">Por cobrar</div></div>
       <div class="stat"><div class="valor">${r.porEstado.cancelado ?? 0}</div><div class="rotulo">Cancelados</div></div>
       <div class="stat"><div class="valor">${r.porEstado.entregado ?? 0}</div><div class="rotulo">Entregados</div></div>
+      <div class="stat ${r.clientesSinZona || r.pedidosSinZona ? "alerta" : ""}" style="cursor:pointer;" onclick="irATab('usuarios')" title="Ir a Usuarios para asignar zonas"><div class="valor">${r.clientesSinZona} · ${r.pedidosSinZona}</div><div class="rotulo">Clientes · pedidos sin zona</div></div>
+      <div class="stat"><div class="valor">${fmtPrecio(r.costo)}</div><div class="rotulo">Costo de insumos</div></div>
+      <div class="stat"><div class="valor">${fmtPrecio(r.descuentos)}</div><div class="rotulo">Descuentos otorgados</div></div>
+      <div class="stat"><div class="valor">${fmtPrecio(r.ganancia)}</div><div class="rotulo">Ganancia bruta</div></div>
+      <div class="stat"><div class="valor">${r.margenReal === null ? "—" : r.margenReal.toFixed(1).replace(".", ",") + " %"}</div><div class="rotulo">Margen real (con descuentos)</div></div>
     </div>
 
     <div class="grid-2" style="margin-top:1.25rem; align-items:start;">

@@ -64,5 +64,5 @@ app.use((err, _req, res, _next) => {
 });
 
 programarCorteDiario();
-const server = app.listen(PORT, () => console.log(`SistemaBRIE escuchando en http://localhost:${PORT}  (persistencia: ${MODO})`));
+const server = app.listen(PORT, () => console.log(`Sistema BRIE escuchando en http://localhost:${PORT}  (persistencia: ${MODO})`));
 export { app, server };

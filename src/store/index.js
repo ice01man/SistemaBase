@@ -5,6 +5,7 @@ import { MODO, HORA_CORTE_DEFECTO } from '../config/env.js';
 import { conectarDB } from '../config/db.js';
 import { repoMemoria, siguienteNumeroMemoria } from './memory.js';
 import { repoMongo, siguienteNumeroMongo } from './mongo.js';
+import { MARGEN_DEFECTO } from '../services/precios.js';
 import { USUARIOS_DEMO, INSUMOS_DEMO, PRODUCTOS_DEMO } from './datos-demo.js';
 
 export const db = {};
@@ -41,16 +42,16 @@ export async function iniciarStore() {
 
 /** Carga usuarios, insumos y platos de demostración (solo si las colecciones están vacías). */
 export async function cargarDemo() {
-  if (!(await db.users.count())) {
-    for (const u of USUARIOS_DEMO) {
-      const { password, ...resto } = u;
-      await db.users.create({ direccion: '', telefono: '', activo: true, ...resto, passwordHash: await bcrypt.hash(password, 10) });
-    }
+  // Crea cada usuario demo que FALTE (por email). Los que ya existen no se tocan.
+  for (const u of USUARIOS_DEMO) {
+    if (await db.users.findOne({ email: u.email })) continue;
+    const { password, ...resto } = u;
+    await db.users.create({ direccion: '', telefono: '', activo: true, ...resto, passwordHash: await bcrypt.hash(password, 10) });
   }
   const porNombre = new Map();
   if (!(await db.insumos.count())) {
-    for (const [nombre, unidad, stock_actual, stock_minimo, costo_unitario] of INSUMOS_DEMO) {
-      await db.insumos.create({ nombre, unidad, stock_actual, stock_minimo, costo_unitario, activo: true });
+    for (const [nombre, unidad, stock_actual, stock_minimo, costo_unitario, categoria] of INSUMOS_DEMO) {
+      await db.insumos.create({ nombre, unidad, stock_actual, stock_minimo, costo_unitario, categoria: categoria || 'Otros', activo: true });
     }
   }
   for (const i of await db.insumos.list()) porNombre.set(i.nombre, i._id);
@@ -62,12 +63,16 @@ export async function cargarDemo() {
       });
     }
   }
-  if (!(await db.config.count())) await db.config.create({ clave: 'sitio', tema: 'violeta', horaCorte: HORA_CORTE_DEFECTO, ultimoCorte: '' });
+  if (!(await db.config.count())) await db.config.create({ clave: 'sitio', tema: 'violeta', horaCorte: HORA_CORTE_DEFECTO, soloPedidoDelDia: true, ultimoCorte: '' });
 }
 
 export async function obtenerConfig() {
   let cfg = await db.config.findOne({ clave: 'sitio' });
-  if (!cfg) cfg = await db.config.create({ clave: 'sitio', tema: 'violeta', horaCorte: HORA_CORTE_DEFECTO, ultimoCorte: '' });
+  if (!cfg) cfg = await db.config.create({ clave: 'sitio', tema: 'violeta', horaCorte: HORA_CORTE_DEFECTO, soloPedidoDelDia: true, ultimoCorte: '' });
   if (typeof cfg.horaCorte !== 'number') cfg.horaCorte = HORA_CORTE_DEFECTO;
+  if (typeof cfg.soloPedidoDelDia !== 'boolean') cfg.soloPedidoDelDia = true;
+  if (typeof cfg.margenObjetivo !== 'number') cfg.margenObjetivo = MARGEN_DEFECTO;
+  if (typeof cfg.umbralStockPct !== 'number') cfg.umbralStockPct = 25;
+  if (!Array.isArray(cfg.zonas)) cfg.zonas = [];
   return cfg;
 }

@@ -25,6 +25,22 @@ export async function authRequired(req, _res, next) {
   next();
 }
 
+/**
+ * Como authRequired pero sin cortar: si hay un token válido, deja req.usuario (con tipoCliente); si no, sigue como visitante.
+ * Lo usan los menús públicos para mostrar los platos "solo empresas" únicamente a clientes Empresa.
+ */
+export async function authOpcional(req, _res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (token) {
+    try {
+      const u = await db.users.get(verificarToken(token).id);
+      if (u && u.activo !== false) req.usuario = { id: String(u._id), rol: u.rol, email: u.email, nombre: u.nombre, tipoCliente: u.tipoCliente || 'final' };
+    } catch { /* token vencido o inválido: se lo trata como visitante */ }
+  }
+  next();
+}
+
 export const requireRol = (...roles) => (req, _res, next) => {
   if (!req.usuario) throw noAutorizado();
   if (!roles.includes(req.usuario.rol)) throw prohibido();

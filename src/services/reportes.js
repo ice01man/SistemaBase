@@ -1,4 +1,4 @@
-import { db } from '../store/index.js';
+import { db, obtenerConfig } from '../store/index.js';
 import { ahora, esFecha, sumarDias } from '../utils/fecha.js';
 import { badRequest } from '../utils/errores.js';
 import { alertasDeStock } from './stock.js';
@@ -19,6 +19,13 @@ export async function resumen({ desde, hasta } = {}) {
   const ventas = validos.reduce((a, p) => a + p.totalAmount, 0);
   const cobrado = validos.filter((p) => p.pagado).reduce((a, p) => a + p.totalAmount, 0);
 
+  // Margen real = (ventas − costo) / ventas, ya con los descuentos aplicados. Solo cuenta pedidos con costo registrado
+  // (los anteriores a esta función no lo tienen y falsearían el porcentaje).
+  const conCosto = validos.filter((p) => p.costoTotal > 0);
+  const ventasConCosto = conCosto.reduce((a, p) => a + p.totalAmount, 0);
+  const costo = Math.round(conCosto.reduce((a, p) => a + p.costoTotal, 0));
+  const descuentos = validos.reduce((a, p) => a + (p.descuentoMonto || 0), 0);
+
   const platos = new Map();
   for (const p of validos) for (const it of p.items) {
     const f = platos.get(it.name) || { name: it.name, qty: 0, monto: 0 };
@@ -33,12 +40,20 @@ export async function resumen({ desde, hasta } = {}) {
     porFecha.set(p.fechaEntrega, f);
   }
 
+  // Zonas: clientes sin zona y pedidos abiertos sin zona (el admin tiene que asignarlas para que lleguen al repartidor correcto).
+  const { zonas } = await obtenerConfig();
+  const clientesSinZona = (await db.users.list({ rol: 'cliente' })).filter((u) => u.activo !== false && !u.zona).length;
+  const pedidosSinZona = (await db.orders.list({ estado: { $in: ['confirmado', 'en_preparacion', 'producido', 'en_camino'] } })).filter((p) => !p.zona).length;
+
   return {
     desde, hasta, hoy,
+    zonasConfiguradas: zonas.length > 0, clientesSinZona, pedidosSinZona,
     pedidos: pedidos.length,
     pedidosValidos: validos.length,
     ventas, cobrado, porCobrar: ventas - cobrado,
     ticketPromedio: validos.length ? Math.round(ventas / validos.length) : 0,
+    costo, descuentos, ganancia: ventasConCosto - costo,
+    margenReal: ventasConCosto > 0 ? Math.round(((ventasConCosto - costo) / ventasConCosto) * 1000) / 10 : null,
     porEstado,
     topPlatos: [...platos.values()].sort((a, b) => b.qty - a.qty).slice(0, 8),
     porFecha: [...porFecha.values()].sort((a, b) => a.fecha.localeCompare(b.fecha)),

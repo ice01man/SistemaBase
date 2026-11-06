@@ -1,18 +1,51 @@
-import { db } from '../store/index.js';
+import { db, obtenerConfig } from '../store/index.js';
+import { ahora, esFecha } from '../utils/fecha.js';
 import { badRequest, noEncontrado, texto, numero, conflicto } from '../utils/errores.js';
 
 const UNIDADES = ['kg', 'g', 'l', 'ml', 'u'];
 const redondear = (n) => Math.round(n * 1000) / 1000;
 
-export const conAlerta = (i) => ({ ...i, bajoMinimo: i.activo !== false && i.stock_actual < i.stock_minimo });
+export const CATEGORIAS = ['Verduras', 'Frutas', 'Lácteos', 'Carnes', 'Almacén', 'Envases', 'Otros'];
+const DIAS_AVISO_VENCIMIENTO = 7; // "vence pronto" = faltan 7 días o menos
+const diasEntre = (desde, hasta) => Math.round((Date.parse(`${hasta}T12:00:00Z`) - Date.parse(`${desde}T12:00:00Z`)) / 86400000);
+
+/**
+ * Agrega al insumo sus alertas:
+ *  bajoMinimo  → stock por debajo del mínimo
+ *  llegando    → stock todavía ≥ mínimo, pero a menos de `umbral` % por encima de él
+ *  vencido / vencePronto → según la fecha de vencimiento del lote
+ *  nivel       → 'critico' (bajo mínimo o vencido), 'aviso' (llegando o vence pronto) u 'ok'
+ */
+export function conAlerta(i, { umbral = 25, hoy = ahora().fecha } = {}) {
+  const activo = i.activo !== false;
+  const bajoMinimo = activo && i.stock_actual < i.stock_minimo;
+  const llegando = activo && !bajoMinimo && i.stock_minimo > 0 && i.stock_actual <= i.stock_minimo * (1 + umbral / 100);
+  const diasParaVencer = i.vencimiento ? diasEntre(hoy, i.vencimiento) : null;
+  const vencido = activo && diasParaVencer !== null && diasParaVencer < 0;
+  const vencePronto = activo && diasParaVencer !== null && diasParaVencer >= 0 && diasParaVencer <= DIAS_AVISO_VENCIMIENTO;
+  const nivel = bajoMinimo || vencido ? 'critico' : llegando || vencePronto ? 'aviso' : 'ok';
+  return { ...i, categoria: i.categoria || 'Otros', vencimiento: i.vencimiento || '', bajoMinimo, llegando, diasParaVencer, vencido, vencePronto, nivel };
+}
+
+async function opcionesAlerta() {
+  const cfg = await obtenerConfig();
+  return { umbral: cfg.umbralStockPct, hoy: ahora().fecha };
+}
 
 export async function listarInsumos({ soloActivos = false } = {}) {
-  const lista = await db.insumos.list(soloActivos ? { activo: true } : {}, { sort: { nombre: 1 } });
-  return lista.map(conAlerta);
+  const [lista, op] = await Promise.all([db.insumos.list(soloActivos ? { activo: true } : {}, { sort: { nombre: 1 } }), opcionesAlerta()]);
+  return lista.map((i) => conAlerta(i, op));
 }
 
 export async function alertasDeStock() {
   return (await listarInsumos({ soloActivos: true })).filter((i) => i.bajoMinimo);
+}
+
+/** '' = sin vencimiento. Si viene, tiene que ser una fecha AAAA-MM-DD válida. */
+function fechaVencimiento(v) {
+  if (v === '' || v === null) return '';
+  if (!esFecha(v)) throw badRequest('Fecha de vencimiento inválida (usá AAAA-MM-DD).');
+  return v;
 }
 
 function validarInsumo(d, parcial = false) {
@@ -24,6 +57,11 @@ function validarInsumo(d, parcial = false) {
   }
   if (!parcial || d.stock_minimo !== undefined) out.stock_minimo = numero(d.stock_minimo ?? 0, 'El stock mínimo', { max: 1e7 });
   if (!parcial || d.costo_unitario !== undefined) out.costo_unitario = numero(d.costo_unitario ?? 0, 'El costo', { max: 1e9 });
+  if (d.categoria !== undefined) {
+    if (!CATEGORIAS.includes(d.categoria)) throw badRequest(`Categoría inválida (${CATEGORIAS.join(', ')}).`);
+    out.categoria = d.categoria;
+  }
+  if (d.vencimiento !== undefined) out.vencimiento = fechaVencimiento(d.vencimiento);
   if (d.activo !== undefined) out.activo = !!d.activo;
   return out;
 }
@@ -34,7 +72,7 @@ export async function crearInsumo(d, por) {
   try {
     const i = await db.insumos.create({ ...datos, stock_actual: stockInicial, activo: datos.activo ?? true });
     if (stockInicial > 0) await registrar(i, 'ingreso', stockInicial, 'Stock inicial', por);
-    return conAlerta(i);
+    return conAlerta(i, await opcionesAlerta());
   } catch (e) {
     if (e.code === 11000) throw conflicto('Ya existe un insumo con ese nombre.');
     throw e;
@@ -47,7 +85,7 @@ export async function editarInsumo(id, d) {
   try {
     const i = await db.insumos.update(id, datos);
     if (!i) throw noEncontrado('Insumo no encontrado');
-    return conAlerta(i);
+    return conAlerta(i, await opcionesAlerta());
   } catch (e) {
     if (e.code === 11000) throw conflicto('Ya existe un insumo con ese nombre.');
     throw e;
@@ -74,7 +112,7 @@ async function registrar(insumo, tipo, cantidad, motivo, por) {
  * Movimiento manual de stock.
  *  ingreso → suma (compra/reposición) · egreso → resta (merma, vencimiento) · ajuste → fija el valor contado
  */
-export async function moverStock(id, { tipo, cantidad, motivo }, por) {
+export async function moverStock(id, { tipo, cantidad, motivo, vencimiento }, por) {
   if (!['ingreso', 'egreso', 'ajuste'].includes(tipo)) throw badRequest('Tipo de movimiento inválido.');
   cantidad = numero(cantidad, 'La cantidad', { min: tipo === 'ajuste' ? 0 : 0.001, max: 1e7 });
   motivo = texto(motivo, 'El motivo', { max: 200, requerido: tipo !== 'ingreso' });
@@ -86,9 +124,12 @@ export async function moverStock(id, { tipo, cantidad, motivo }, por) {
     if (cantidad > actual.stock_actual) throw badRequest(`No hay tanto stock (disponible: ${redondear(actual.stock_actual)} ${actual.unidad}).`);
     nuevo = actual.stock_actual - cantidad;
   } else nuevo = cantidad;
-  const i = await db.insumos.update(id, { stock_actual: redondear(nuevo) });
+  // En un ingreso se puede cargar el vencimiento del lote nuevo (reemplaza al anterior).
+  const patch = { stock_actual: redondear(nuevo) };
+  if (tipo === 'ingreso' && vencimiento) patch.vencimiento = fechaVencimiento(vencimiento);
+  const i = await db.insumos.update(id, patch);
   await registrar(i, tipo, tipo === 'ajuste' ? Math.abs(nuevo - actual.stock_actual) : cantidad, motivo, por);
-  return conAlerta(i);
+  return conAlerta(i, await opcionesAlerta());
 }
 
 export async function listarMovimientos({ insumo, limit = 200 } = {}) {

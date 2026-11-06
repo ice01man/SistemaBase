@@ -1,4 +1,5 @@
-// Limitador de intentos en memoria (sin dependencias): frena fuerza bruta en login/registro.
+// Limitador de intentos FALLIDOS en memoria (sin dependencias): frena la fuerza bruta en login/registro.
+// Los ingresos correctos no cuentan: solo se anotan las respuestas con error (400 o más).
 export function limitador({ ventanaMs = 15 * 60 * 1000, max = 10, mensaje = 'Demasiados intentos. Probá de nuevo en unos minutos.' } = {}) {
   const fallos = new Map(); // ip -> [timestamps de intentos fallidos]
   return (req, res, next) => {

@@ -1,4 +1,4 @@
-# SistemaBRIE · Brie — Cambios y guía de puesta en marcha
+# SistemaBase · Brie — Cambios y guía de puesta en marcha
 
 Versión: rama `seguridad-y-funcionalidad` sobre el commit `116eec4`.
 
@@ -89,6 +89,6 @@ Se eliminaron `src/config/memoria.js`, `public/admin.html`, `public/panel.html`,
 - Mercado Pago / pagos online: no está. Hoy es efectivo o transferencia, marcados a mano.
 - Notificaciones por mail/WhatsApp: no están.
 - `src/models/Menu.js` y `src/routes/menuRoutes.js` no se usan (apuntan a un controller que no existe). Quedaron sin tocar.
-- `SistemaBRIE-actualizado.zip` está commiteado en el repo: conviene sacarlo del control de versiones.
+- `SistemaBase-actualizado.zip` está commiteado en el repo: conviene sacarlo del control de versiones.
 - En producción: HTTPS, `NODE_ENV=production` y activar CSP (hoy está apagada por los scripts inline).
 - Antes de salir a producción borrá los usuarios demo (`admin123`, etc.) si cargaste `--demo`.

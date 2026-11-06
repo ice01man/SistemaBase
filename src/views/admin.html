@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Administración · SistemaBRIE</title>
+<title>Administración · Sistema BRIE</title>
 <link rel="stylesheet" href="css/brie.css" />
 </head>
 <body>
@@ -37,6 +37,7 @@
 <script src="js/constants.js"></script>
 <script src="js/navbar.js"></script>
 <!-- Módulos de cada pestaña (los sirve el servidor solo a un admin con sesión) -->
+<script src="/admin/js/modal.js"></script>
 <script src="/admin/js/resumen.js"></script>
 <script src="/admin/js/pedidos.js"></script>
 <script src="/admin/js/productos.js"></script>
@@ -57,6 +58,35 @@
     Promise.resolve(TABS[nombre]()).catch((err) => toast(err.message, "error"));
   }
 
+  // Pedidos nuevos: cada 15 s se consultan los "confirmados"; si aparece uno que no se conocía, se avisa y se recarga la tabla.
+  let pedidosConocidos = null;
+  async function buscarPedidosNuevos() {
+    try {
+      const lista = await apiGet("/orders?estado=confirmado");
+      const ids = new Set(lista.map((p) => p._id));
+      if (pedidosConocidos) {
+        const nuevos = lista.filter((p) => !pedidosConocidos.has(p._id));
+        if (nuevos.length) {
+          avisarPedidoNuevo(nuevos);
+          const activa = (location.hash.slice(1) || "resumen");
+          if (activa === "pedidos" || activa === "resumen") irATab(activa);
+        }
+      }
+      pedidosConocidos = ids;
+    } catch { /* sin conexión: se reintenta en el próximo ciclo */ }
+  }
+  function avisarPedidoNuevo(nuevos) {
+    document.getElementById("aviso-pedido")?.remove();
+    const p = nuevos[0];
+    const d = document.createElement("div");
+    d.id = "aviso-pedido"; d.className = "aviso-pedido";
+    d.innerHTML = `<h3 style="margin:0 0 .35rem;">🔔 ${nuevos.length === 1 ? "Nuevo pedido" : nuevos.length + " pedidos nuevos"}</h3>
+      <p style="margin:0 0 .75rem;">${nuevos.length === 1 ? `<b>#${p.numero ?? ""}</b> · ${esc(p.cliente?.nombre ?? "")} · ${fmtPrecio(p.totalAmount)}<br><small>Entrega: ${fmtFechaEntrega(p.fechaEntrega)}</small>` : "Llegaron pedidos nuevos."}</p>
+      <div style="display:flex; gap:.5rem;"><button class="btn-primary" onclick="location.hash='pedidos'; irATab('pedidos'); this.closest('.aviso-pedido').remove()">Ver pedidos</button>
+      <button class="btn-ghost" onclick="this.closest('.aviso-pedido').remove()">Cerrar</button></div>`;
+    document.body.appendChild(d);
+  }
+
   function init() {
     usuarioActual = requireRol("admin");
     if (!usuarioActual) return;
@@ -65,6 +95,8 @@
     });
     window.addEventListener("hashchange", () => irATab(location.hash.slice(1)));
     irATab(location.hash.slice(1));
+    buscarPedidosNuevos();
+    setInterval(buscarPedidosNuevos, 15000);
   }
   init();
 </script>

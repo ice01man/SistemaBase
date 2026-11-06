@@ -1,4 +1,4 @@
-/* ===== SistemaBRIE · estilo Brie ===== */
+/* ===== Sistema BRIE · estilo Brie ===== */
 
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap");
 
@@ -231,4 +231,43 @@ th { color: var(--brie-violet-dark); font-weight: 800; font-size: .75rem; text-t
 .form-grid { display: grid; gap: .75rem; grid-template-columns: 1fr 1fr; }
 .form-grid .ancho { grid-column: 1 / -1; }
 @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
-.receta-fila { display: grid; grid-template-columns: 1fr 7rem auto; gap: .5rem; margin-bottom: .4rem; align-items: center; }
+/* Fila de receta: insumo | cantidad | costo | ícono. En pantallas angostas el costo pasa a su propia línea. */
+.receta-fila { display: grid; grid-template-columns: minmax(0, 1fr) 7.5rem 9.5rem 2.4rem; gap: .5rem; margin-bottom: .4rem; align-items: center; }
+@media (max-width: 1100px) { .receta-fila { grid-template-columns: minmax(0, 1fr) 6.5rem 2.4rem; } .receta-fila .r-info { grid-column: 1 / -1; order: 5; } }
+/* Botones de ícono (acciones de tablas y filas) */
+.btn-icono { width: 2.2rem; height: 2.2rem; padding: 0; border-radius: .6rem; border: 1px solid var(--brie-lavender-light, #ddd); background: #fff; cursor: pointer; font-size: 1rem; line-height: 1; }
+.btn-icono:hover { background: rgba(0,0,0,.05); }
+.btn-icono.peligro:hover { background: #fee2e2; border-color: #fca5a5; }
+
+/* ── Precios: costo / sugerido / venta / margen ── */
+.precio-cajas { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; }
+.precio-cajas > div { background: rgba(0,0,0,.04); border-radius: .6rem; padding: .55rem .7rem; display: flex; flex-direction: column; }
+.precio-cajas small { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; opacity: .7; }
+.precio-cajas strong { font-size: 1.15rem; }
+.linea-desc { display: flex; justify-content: space-between; color: #166534; font-weight: 700; }
+.linea-desc.sutil { color: inherit; opacity: .75; font-weight: 400; }
+
+/* Insumos: fila de aviso (llegando al mínimo / vence pronto) */
+tr.fila-aviso td { background: #fff7ed; }
+
+/* Íconos en línea dentro de una celda (sin display:flex en el td) y con manito */
+.btn-icono { margin-right: .25rem; vertical-align: middle; }
+.btn-icono:last-child { margin-right: 0; }
+button.btn-icono, .btn-icono:hover { cursor: pointer !important; }
+
+/* ── Ventana modal (formularios del panel de administración) ── */
+#modal-fondo { position: fixed; inset: 0; z-index: 900; background: rgba(30, 20, 60, .5); display: flex; justify-content: center; align-items: flex-start; padding: 3vh 1rem; overflow-y: auto; }
+.modal-caja { background: #fff; border-radius: 1rem; width: 100%; margin: auto; padding: 0 1.5rem 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.modal-cabecera { position: sticky; top: 0; z-index: 1; background: #fff; display: flex; justify-content: space-between; align-items: center; padding: 1rem 0 .75rem; margin-bottom: .5rem; border-bottom: 1px solid var(--brie-lavender-light, #eee); }
+.modal-cabecera h3 { margin: 0; font-size: 1.15rem; }
+.modal-caja form.card { border: none; box-shadow: none; padding: 0; background: transparent; }
+body.modal-abierto { overflow: hidden; }
+
+/* Aviso de clientes sin zona (Usuarios) */
+.aviso-zona { background: #fff7ed; border: 1px solid #fdba74; color: #7c2d12; border-radius: .75rem; padding: .75rem 1rem; font-size: .9rem; }
+
+/* Las acciones quedan siempre visibles a la derecha aunque la tabla sea ancha */
+.tabla-scroll th:last-child, .tabla-scroll td:last-child { position: sticky; right: 0; background: #fff; box-shadow: -6px 0 6px -6px rgba(0,0,0,.15); }
+/* Aviso de pedido nuevo (panel admin) */
+.aviso-pedido { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 60; max-width: 22rem; background: #fff; border: 2px solid var(--brie-solid, #7c3aed); border-radius: 1rem; padding: 1rem 1.1rem; box-shadow: 0 10px 30px rgba(0,0,0,.25); animation: sube .25s ease-out; }
+@keyframes sube { from { transform: translateY(1rem); opacity: 0; } to { transform: none; opacity: 1; } }

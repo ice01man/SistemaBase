@@ -79,3 +79,11 @@ function toast(texto, tipo = "ok") {
   cont.appendChild(t);
   setTimeout(() => t.remove(), tipo === "error" ? 6000 : 3500);
 }
+
+// Estado del cobro de un pedido, con la misma redacción en todas las pantallas.
+function estadoPago(p) {
+  if (p.pagado) return { texto: "Pagado", estilo: "background:#dcfce7;color:#166534;" };
+  if (p.medioPago === "efectivo") return { texto: "A cobrar en efectivo", estilo: "background:#fef3c7;color:#92400e;" };
+  return { texto: "Falta transferencia", estilo: "background:#ffedd5;color:#c2410c;" };
+}
+const badgePago = (p) => { const e = estadoPago(p); return `<span class="badge" style="${e.estilo}">${e.texto}</span>`; };

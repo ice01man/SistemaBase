@@ -6,7 +6,7 @@ export const getUsers = async (_req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  res.status(201).json(await crearUsuario(req.body ?? {}));
+  res.status(201).json(await crearUsuario(req.body ?? {}, { esAdmin: true }));
 };
 
 export const updateUser = async (req, res) => {

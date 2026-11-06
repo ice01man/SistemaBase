@@ -7,6 +7,8 @@ const insumoSchema = new mongoose.Schema({
   stock_actual:  { type: Number, default: 0, min: 0 },
   stock_minimo:  { type: Number, default: 0, min: 0 },
   costo_unitario:{ type: Number, default: 0, min: 0 },
+  categoria:     { type: String, default: 'Otros' },     // Verduras, Lácteos, Carnes... (para filtrar)
+  vencimiento:   { type: String, default: '' },          // 'YYYY-MM-DD' del lote en stock ('' = sin vencimiento)
   activo:        { type: Boolean, default: true },
 }, { timestamps: true });
 

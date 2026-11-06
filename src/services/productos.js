@@ -1,4 +1,5 @@
 import { db } from '../store/index.js';
+import { ingredientesDeReceta } from './precios.js';
 import { badRequest, noEncontrado, texto, numero } from '../utils/errores.js';
 
 const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -31,6 +32,8 @@ export async function validarProducto(d, parcial = false) {
   if (campo('description')) out.description = texto(d.description, 'La descripción', { max: 400 });
   if (campo('image')) out.image = texto(d.image, 'La imagen', { max: 500 });
   if (campo('price')) out.price = numero(d.price, 'El precio', { min: 0, max: 1e7 });
+  if (campo('precioEmpresa') && d.precioEmpresa !== undefined) out.precioEmpresa = numero(d.precioEmpresa, 'El precio empresa', { min: 0, max: 1e7 });
+  if (campo('precioDescuento') && d.precioDescuento !== undefined) out.precioDescuento = numero(d.precioDescuento, 'El precio con descuento', { min: 0, max: 1e7 });
   if (d.ingredients !== undefined) {
     if (!Array.isArray(d.ingredients)) throw badRequest('Los ingredientes deben ser una lista.');
     out.ingredients = d.ingredients.map((x) => texto(x, 'Ingrediente', { max: 80 }));
@@ -47,8 +50,16 @@ export async function validarProducto(d, parcial = false) {
     };
   }
   if (d.activo !== undefined) out.activo = !!d.activo;
+  if (d.soloEmpresas !== undefined) out.soloEmpresas = !!d.soloEmpresas;
   const receta = await validarReceta(d.receta);
-  if (receta !== undefined) out.receta = receta;
+  if (receta !== undefined) {
+    out.receta = receta;
+    // Los ingredientes que ve el cliente salen de los insumos de la receta (única fuente de verdad).
+    if (receta.length) {
+      const mapa = new Map((await db.insumos.list({})).map((i) => [String(i._id), i]));
+      out.ingredients = ingredientesDeReceta(receta, mapa);
+    }
+  }
   return out;
 }
 
