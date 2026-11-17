@@ -1,3 +1,12 @@
+// Tipos de cliente que ven el plato (platos viejos: solo empresas → empresa; el resto → todos).
+const TODOS_LOS_TIPOS = ["final", "empresa", "descuento"];
+const tiposVisibles = (p) => (Array.isArray(p?.visiblePara) && p.visiblePara.length ? p.visiblePara : p?.soloEmpresas ? ["empresa"] : TODOS_LOS_TIPOS);
+const NOMBRE_TIPO = { final: "Final", empresa: "Empresa", descuento: "Con desc." };
+const etiquetaVisibilidad = (p) => {
+  const t = tiposVisibles(p);
+  return t.length === TODOS_LOS_TIPOS.length ? "" : ` <span class="badge" style="background:#ede9fe;color:#5b21b6;">👁 Solo: ${t.map((x) => NOMBRE_TIPO[x]).join(", ")}</span>`;
+};
+
 // Pestaña "Platos y recetas": alta/edición de platos del menú y de la receta de cada uno
 // (qué insumos y cuánto consume UNA porción: con eso el corte de producción descuenta el stock).
 let productosCache = [];
@@ -36,7 +45,7 @@ function renderProductos() {
       <thead><tr><th>Nombre</th><th>Costo</th><th>Sugerido <small>(${margenObjetivo} %)</small></th><th>Público</th><th>Empresa</th><th>Con desc.</th><th>Estado</th><th></th></tr></thead>
       <tbody>${productosCache.map((p) => `
         <tr>
-          <td><strong>${esc(p.name)}</strong>${p.soloEmpresas ? ` <span class="badge" style="background:#ede9fe;color:#5b21b6;">🏢 Solo empresas</span>` : ""}<br><small style="opacity:.7; text-transform:capitalize;">${esc(DIA_LABEL[p.day] ?? p.day)} · ${esc(p.category)}${(p.receta || []).length ? "" : ` · <span style="color:#92400e;">⚠ sin receta</span>`}</small></td>
+          <td><strong>${esc(p.name)}</strong>${etiquetaVisibilidad(p)}<br><small style="opacity:.7; text-transform:capitalize;">${esc(DIA_LABEL[p.day] ?? p.day)} · ${esc(p.category)}${(p.receta || []).length ? "" : ` · <span style="color:#92400e;">⚠ sin receta</span>`}</small></td>
           <td>${p.costo > 0 ? fmtPrecio(p.costo) : "—"}${p.costoIncompleto && p.costo > 0 ? ` <span title="Hay insumos sin costo cargado: el costo real es mayor">⚠</span>` : ""}</td>
           <td>${p.precioSugerido ? fmtPrecio(p.precioSugerido) : "—"}</td>
           ${celdaPrecio(p.price, p.costo > 0 ? p.margenReal : null)}
@@ -130,7 +139,11 @@ function abrirFormProducto(id) {
       <div class="ancho"><label class="label">URL de imagen</label><input class="input" name="image" value="${esc(p?.image ?? "")}" required /></div>
       <div class="ancho"><label class="label">Tags / dieta (coma, ej: Sin Gluten, 100% Vegano)</label><input class="input" name="tagsCsv" value="${esc((p?.tags || []).join(", "))}" /></div>
       <div><label class="label">Badge destacado (opcional)</label><input class="input" name="destacado" value="${esc(p?.destacado ?? "")}" /></div>
-      <label style="display:flex; align-items:center; gap:.5rem; font-weight:700;"><input type="checkbox" name="soloEmpresas" ${p?.soloEmpresas ? "checked" : ""} style="width:auto;" /> 🏢 Solo para empresas (menú de empresas)</label>
+      <div class="ancho"><label class="label">Se muestra a (tipo de cliente)</label>
+        <div style="display:flex; flex-wrap:wrap; gap:1rem; font-weight:700;">
+          ${[["final", "Cliente final"], ["empresa", "🏢 Empresa"], ["descuento", "🏷 Con descuento"]].map(([k, v]) => `<label style="display:flex; align-items:center; gap:.4rem;"><input type="checkbox" name="vis_${k}" ${tiposVisibles(p).includes(k) ? "checked" : ""} style="width:auto;" /> ${v}</label>`).join("")}
+        </div>
+        <p style="font-size:.75rem; opacity:.7; margin:.25rem 0 0;">Si un tipo no está tildado, ese cliente no ve ni puede pedir este plato.</p></div>
       <label style="display:flex; align-items:center; gap:.5rem; font-weight:700;"><input type="checkbox" name="activo" ${p?.activo === false ? "" : "checked"} style="width:auto;" /> Activo (visible en el menú)</label>
 
       <div class="ancho"><label class="label">Receta · insumos que consume UNA porción</label>
@@ -173,7 +186,7 @@ async function guardarProducto(e) {
     tags: fd.tagsCsv.split(",").map((s) => s.trim()).filter(Boolean),
     destacado: fd.destacado || null,
     activo: fd.activo === "on",
-    soloEmpresas: fd.soloEmpresas === "on",
+    visiblePara: ["final", "empresa", "descuento"].filter((k) => fd[`vis_${k}`] === "on"),
     receta,
   };
   try {

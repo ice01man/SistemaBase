@@ -1,5 +1,6 @@
 import { verificarToken } from './auth.js';
 import { db } from '../store/index.js';
+import { LITE } from '../config/env.js';
 
 /** Lee la cookie "sb_token" a mano (sin sumar cookie-parser). */
 export function leerCookie(req, nombre) {
@@ -21,6 +22,7 @@ export function paginaRequiereRol(...roles) {
       const payload = verificarToken(token);
       const u = await db.users.get(payload.id);
       if (!u || u.activo === false) return res.redirect('/login.html');
+      if (LITE && u.rol === 'admin') return res.redirect('/login.html');
       if (roles.length && !roles.includes(u.rol)) return res.redirect('/login.html');
       req.usuario = { id: String(u._id), rol: u.rol, email: u.email, nombre: u.nombre };
       next();

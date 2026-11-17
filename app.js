@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-import { PORT, CORS_ORIGIN, MODO } from './src/config/env.js';
+import { PORT, CORS_ORIGIN, MODO, LITE } from './src/config/env.js';
 import { iniciarStore } from './src/store/index.js';
 import { ErrorHttp } from './src/utils/errores.js';
 import authRoutes from './src/routes/authRoutes.js';
@@ -14,6 +14,7 @@ import orderRoutes from './src/routes/orderRoutes.js';
 import configRoutes from './src/routes/configRoutes.js';
 import insumoRoutes from './src/routes/insumoRoutes.js';
 import produccionRoutes from './src/routes/produccionRoutes.js';
+import { soloRutasLite } from './src/middleware/modoLite.js';
 import { paginaRequiereRol } from './src/middleware/paginaAuth.js';
 import { ROLES_COCINA, ROLES_REPARTO } from './src/middleware/auth.js';
 import { programarCorteDiario } from './src/services/produccion.js';
@@ -34,14 +35,19 @@ app.use(express.json({ limit: '100kb' }));
 // Páginas privadas: NO son estáticos de /public. Se verifica el rol contra la cookie de sesión
 // ANTES de mandar el HTML. Van antes de express.static para tener prioridad.
 const vista = (archivo) => (_req, res) => res.sendFile(join(__dirname, 'src/views', archivo));
-app.get('/admin', paginaRequiereRol('admin'), vista('admin.html'));
-app.use('/admin/js', paginaRequiereRol('admin'), express.static(join(__dirname, 'src/views/admin-js')));
+if (!LITE) {
+  app.get('/admin', paginaRequiereRol('admin'), vista('admin.html'));
+  app.use('/admin/js', paginaRequiereRol('admin'), express.static(join(__dirname, 'src/views/admin-js')));
+}
 app.get('/cocina', paginaRequiereRol(...ROLES_COCINA), vista('cocina.html'));
 app.get('/reparto', paginaRequiereRol(...ROLES_REPARTO), vista('reparto.html'));
 app.get('/panel', (_req, res) => res.redirect('/cocina')); // compatibilidad con el panel anterior
 
+// LITE: ni el panel de admin ni el front viejo (que traía pantallas de administración) se sirven.
+if (LITE) app.use(['/_legacy-spa', '/js/script.js'], (_req, res) => res.status(404).end());
 app.use(express.static(join(__dirname, 'public'))); // front público
 
+if (LITE) app.use('/api', soloRutasLite); // lista blanca: lo demás ni existe
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -63,6 +69,6 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-programarCorteDiario();
-const server = app.listen(PORT, () => console.log(`Sistema BRIE escuchando en http://localhost:${PORT}  (persistencia: ${MODO})`));
+if (!LITE) programarCorteDiario(); // el corte automático corre solo en el sistema completo (dos procesos lo harían doble)
+const server = app.listen(PORT, () => console.log(`Sistema BRIE escuchando en http://localhost:${PORT}  (persistencia: ${MODO}${LITE ? ', versión LITE' : ''})`));
 export { app, server };

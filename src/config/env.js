@@ -2,6 +2,16 @@
 // NO arranca (antes caía en silencio a "modo memoria" y dejaba todo abierto como admin).
 import 'dotenv/config';
 import crypto from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+/**
+ * Versión LITE: solo clientes, cocina y reparto. Se activa con MODO_APP=lite o, automáticamente,
+ * cuando el paquete NO trae el panel de administración (src/views/admin.html): una instalación lite
+ * armada con `npm run armar:lite` no tiene esos archivos y tampoco puede comportarse como admin.
+ */
+const hayPanelAdmin = existsSync(fileURLToPath(new URL('../views/admin.html', import.meta.url)));
+export const LITE = (process.env.MODO_APP || '').toLowerCase() === 'lite' || !hayPanelAdmin;
 
 export const MODO = (process.env.PERSISTENCIA || 'mongo').toLowerCase();
 export const PRODUCCION = process.env.NODE_ENV === 'production';

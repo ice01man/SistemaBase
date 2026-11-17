@@ -9,7 +9,8 @@
     "dev": "nodemon app.js",
     "test": "node --test --test-concurrency=1 test/*.test.js",
     "seed": "node seed.js",
-    "rol": "node scripts/cambiar-rol.js"
+    "rol": "node scripts/cambiar-rol.js",
+    "armar:lite": "node scripts/armar-lite.js"
   },
   "keywords": [],
   "author": "",

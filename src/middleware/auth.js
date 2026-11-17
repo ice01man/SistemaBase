@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/env.js';
+import { JWT_SECRET, LITE } from '../config/env.js';
 import { db } from '../store/index.js';
 import { noAutorizado, prohibido } from '../utils/errores.js';
 
@@ -21,6 +21,7 @@ export async function authRequired(req, _res, next) {
   try { payload = verificarToken(token); } catch { throw noAutorizado('Token inválido o expirado'); }
   const u = await db.users.get(payload.id);
   if (!u || u.activo === false) throw noAutorizado('La cuenta no existe o está desactivada');
+  if (LITE && u.rol === 'admin') throw noAutorizado('Esta cuenta no puede ingresar por esta dirección.');
   req.usuario = { id: String(u._id), rol: u.rol, email: u.email, nombre: u.nombre };
   next();
 }

@@ -10,6 +10,7 @@ const productSchema = new mongoose.Schema({
     price: { type: Number, required: true, min: 0 },          // precio PÚBLICO (cliente final)
     precioEmpresa: { type: Number, default: 0, min: 0 },       // 0 = igual al público
     precioDescuento: { type: Number, default: 0, min: 0 },     // 0 = igual al público
+    visiblePara: { type: [String], default: undefined },       // tipos de cliente que ven y piden el plato (final, empresa, descuento). Vacío = dato viejo: se deduce de soloEmpresas
     soloEmpresas: { type: Boolean, default: false },          // true = plato del menú de empresas: solo lo ven y lo piden clientes tipo Empresa
     activo: { type: Boolean, default: true }, // false = no aparece en el menú público (se conserva para historial de pedidos)
     // Receta: insumos que consume UNA porción. Se descuentan del stock en el corte de producción (P3).

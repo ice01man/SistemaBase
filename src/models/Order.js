@@ -35,6 +35,7 @@ const orderSchema = new mongoose.Schema({
     pagoConfirmadoPor: { type: String, default: '' },   // quién marcó el pago como recibido
     pagoConfirmadoEn: { type: Date, default: null },
     stockDescontado: { type: Boolean, default: false },  // lo marca el corte de producción (P3)
+    cargadoPor: { type: String, default: '' },           // si lo cargó el admin a nombre del cliente: quién
     tomadoPor: { type: String, default: null },          // quién de cocina lo tomó
     repartidor: { type: String, default: null },         // quién lo reparte
     motivoCancelacion: { type: String, default: '' },

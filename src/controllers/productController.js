@@ -1,5 +1,5 @@
 import { db, obtenerConfig } from '../store/index.js';
-import { costoDeReceta, precioSugerido, margenReal, ingredientesDeReceta } from '../services/precios.js';
+import { costoDeReceta, precioSugerido, margenReal, ingredientesDeReceta, tiposDelPlato } from '../services/precios.js';
 import { crearProducto, editarProducto, borrarProducto } from '../services/productos.js';
 import { badRequest } from '../utils/errores.js';
 
@@ -11,9 +11,13 @@ const paraPublico = (insumos) => ({ receta, precioEmpresa, precioDescuento, ...p
   return ing.length ? { ...p, ingredients: ing } : p;
 };
 
-// Los platos "solo empresas" los ven únicamente los clientes tipo Empresa (y el admin). El visitante y el cliente final no.
-const veMenuEmpresas = (u) => !!u && (u.rol === 'admin' || u.tipoCliente === 'empresa');
-const visibles = (req) => (p) => !p.soloEmpresas || veMenuEmpresas(req.usuario);
+// Cada plato se muestra solo a los tipos de cliente tildados por el admin. El visitante sin sesión cuenta como cliente final.
+// El admin ve todo (para poder cargar pedidos a nombre de cualquier cliente).
+const visibles = (req) => (p) => {
+  const u = req.usuario;
+  if (u?.rol === 'admin') return true;
+  return tiposDelPlato(p).includes(u?.tipoCliente || 'final');
+};
 
 export const getProducts = async (req, res) => {
   res.json((await db.products.list({ activo: { $ne: false } })).filter(visibles(req)).map(paraPublico(await mapaInsumos())));

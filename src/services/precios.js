@@ -49,6 +49,13 @@ export function margenReal(precio, costo) {
 //   empresa   → precio empresa
 //   descuento → precio con descuento
 export const TIPOS_CLIENTE = ['final', 'empresa', 'descuento'];
+
+/**
+ * ¿A qué tipos de cliente se le muestra (y puede pedir) un plato?
+ * `visiblePara` lo tilda el admin en cada plato. Platos viejos sin ese dato: "solo empresas" → solo empresa; el resto → todos.
+ */
+export const tiposDelPlato = (p) =>
+  Array.isArray(p?.visiblePara) && p.visiblePara.length ? p.visiblePara : (p?.soloEmpresas ? ['empresa'] : TIPOS_CLIENTE);
 export const ETIQUETA_TIPO = { final: 'Cliente final', empresa: 'Empresa', descuento: 'Con descuento' };
 
 /** Precio que le toca a un tipo de cliente. Si el plato no tiene cargado ese precio, se usa el público. */

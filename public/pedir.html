@@ -19,6 +19,13 @@
   .linea { display:flex; justify-content:space-between; align-items:center; gap:.5rem; }
   .linea-nombre { flex:1; }
 </style>
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#7a68b5" />
+<link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Brie" />
+<script src="/js/pwa.js" defer></script>
 </head>
 <body>
 <div id="navbar"></div>
@@ -48,6 +55,8 @@
   let entregas = {};          // { lunes: '2026-11-09', ... } lo calcula el servidor
   let horaCorte = 10;
   let medioPago = "efectivo";
+  let clientes = [];          // solo admin: clientes para cargar el pedido a su nombre
+  let clienteSel = "";        // id del cliente elegido (admin)
   let pedibles = DIAS;        // días que se pueden pedir ahora (lo decide el servidor)
   let soloHoy = false;
   let diaHoySrv = "";
@@ -62,6 +71,9 @@
     usuario = requireRol("cliente", "admin");
     if (!usuario) return;
     try { carrito = JSON.parse(localStorage.getItem("sb_cart") || "{}") || {}; } catch { carrito = {}; }
+    if (usuario.role === "admin") {
+      try { clientes = (await apiGet("/users")).filter((u) => u.role === "cliente" && u.activo !== false); } catch { clientes = []; }
+    }
     try {
       const f = await apiGet("/orders/fechas");
       entregas = f.entregas; horaCorte = f.horaCorte; pedibles = f.pedibles; soloHoy = f.soloPedidoDelDia; diaHoySrv = f.diaHoy;
@@ -141,7 +153,10 @@
     const items = puedePedir(diaActual) ? Object.entries(cartDia()).filter(([, c]) => c > 0) : [];
     const total = items.reduce((acc, [id, c]) => acc + (productos.find((p) => p._id === id)?.price ?? 0) * c, 0);
     const totalItems = items.reduce((a, [, c]) => a + c, 0);
-    const visibles = categoriaActual === "Todos" ? productos : productos.filter((p) => p.category === categoriaActual);
+    // Admin con cliente elegido: solo los platos que ese tipo de cliente puede ver (los tildó el admin en cada plato).
+    const tipoSel = usuario.role === "admin" && clienteSel ? (clientes.find((c) => c._id === clienteSel)?.tipoCliente || "final") : null;
+    const delTipo = (p) => !tipoSel || (Array.isArray(p.visiblePara) && p.visiblePara.length ? p.visiblePara : p.soloEmpresas ? ["empresa"] : ["final", "empresa", "descuento"]).includes(tipoSel);
+    const visibles = productos.filter((p) => delTipo(p) && (categoriaActual === "Todos" || p.category === categoriaActual));
     const entrega = entregas[diaActual];
 
     cont.innerHTML = `
@@ -180,8 +195,14 @@
           </div>
         </div>
 
-        <label class="label" style="margin-top:1rem;">Dirección de entrega *</label>
-        <input class="input" id="dir" required maxlength="200" placeholder="Calle, número, localidad" value="${esc(dirPrev ?? usuario.direccion ?? "")}" />
+        ${usuario.role === "admin" ? `
+        <label class="label" style="margin-top:1rem;">Pedido a nombre de *</label>
+        <select class="input" id="cliente" required onchange="elegirCliente(this.value)">
+          <option value="">— Elegí el cliente —</option>
+          ${clientes.map((c) => `<option value="${c._id}" ${c._id === clienteSel ? "selected" : ""}>${esc(c.nombre)}${c.empresa ? ` · ${esc(c.empresa)}` : ""}${c.tipoCliente && c.tipoCliente !== "final" ? ` (${esc(c.tipoCliente)})` : ""}</option>`).join("")}
+        </select>` : ""}
+        <label class="label" style="margin-top:${usuario.role === "admin" ? ".6rem" : "1rem"};">Dirección de entrega *</label>
+        <input class="input" id="dir" required maxlength="200" placeholder="Calle, número, localidad" value="${esc(dirPrev ?? (usuario.role === "admin" ? (clientes.find((c) => c._id === clienteSel)?.direccion ?? "") : usuario.direccion) ?? "")}" />
         <label class="label" style="margin-top:.6rem;">Observaciones (opcional)</label>
         <input class="input" id="obs" maxlength="300" placeholder="Timbre, sin cebolla, horario..." value="${esc(obsPrev ?? "")}" />
         <label class="label" style="margin-top:.6rem;">Medio de pago</label>
@@ -215,7 +236,7 @@
     const items = Object.entries(cartDia()).filter(([, c]) => c > 0).map(([productId, qty]) => ({ productId, qty }));
     if (!items.length) return;
     let cot;
-    try { cot = await apiPost("/orders/cotizar", { dia: diaActual, items }); } catch { return; } // si falla, queda el total provisorio
+    try { cot = await apiPost("/orders/cotizar", { dia: diaActual, items, ...(clienteSel ? { clienteId: clienteSel } : {}) }); } catch { return; } // si falla, queda el total provisorio
     if (mi !== cotSeq) return; // llegó una cotización más vieja que otra ya pedida
     const det = document.getElementById("cot-detalle");
     if (!det) return;
@@ -237,6 +258,22 @@
     if (t) t.textContent = `🛒 ${cot.porciones} ${cot.porciones === 1 ? "plato" : "platos"} · ${fmtPrecio(cot.total)}`;
   }
 
+  // Admin: al elegir cliente se rellena su dirección y se recalcula el precio con SU lista (final / empresa / descuento).
+  function elegirCliente(id) {
+    clienteSel = id;
+    const c = clientes.find((x) => x._id === id);
+    const dir = document.getElementById("dir");
+    if (dir && c) dir.value = c.direccion || "";
+    const tipo = c?.tipoCliente || "final";
+    for (const pid of Object.keys(cartDia())) {
+      const p = productos.find((x) => x._id === pid);
+      const t = p && Array.isArray(p.visiblePara) && p.visiblePara.length ? p.visiblePara : p?.soloEmpresas ? ["empresa"] : ["final", "empresa", "descuento"];
+      if (p && !t.includes(tipo)) delete cartDia()[pid];
+    }
+    guardarCarrito();
+    render();
+  }
+
   async function confirmarPedido(e) {
     e.preventDefault();
     const btn = document.getElementById("btn-confirmar");
@@ -245,14 +282,26 @@
     // Solo se manda QUÉ y CUÁNTO: el servidor pone nombres, precios y total.
     const items = Object.entries(cartDia()).filter(([, c]) => c > 0).map(([productId, qty]) => ({ productId, qty }));
     if (items.length === 0) return false;
+    if (usuario.role === "admin" && !clienteSel) {
+      errorEl.innerHTML = `<p class="msg-error" style="margin-top:0.75rem;">Elegí el cliente a cuyo nombre se carga el pedido.</p>`;
+      return false;
+    }
     const direccion = document.getElementById("dir").value.trim();
     const observaciones = document.getElementById("obs").value.trim();
 
     btn.disabled = true; btn.textContent = "Confirmando...";
     try {
-      await apiPost("/orders", { dia: diaActual, items, direccion, observaciones, medioPago });
+      const creado = await apiPost("/orders", { dia: diaActual, items, direccion, observaciones, medioPago, ...(usuario.role === "admin" ? { clienteId: clienteSel } : {}) });
       delete carrito[diaActual];
       guardarCarrito();
+      if (usuario.role === "admin") {
+        // El pedido queda a nombre del cliente: no se toca la dirección del admin ni se va a "Mis pedidos".
+        const quien = clientes.find((c) => c._id === clienteSel)?.nombre ?? "el cliente";
+        await cargarDia();
+        const caja = document.getElementById("pedido-error");
+        if (caja) caja.innerHTML = `<p style="margin-top:.75rem; color:#157347; font-weight:700;">✅ Pedido${creado?.numero ? ` N° ${creado.numero}` : ""} cargado a nombre de ${esc(quien)}.</p>`;
+        return false;
+      }
       // guarda la dirección como predeterminada para la próxima vez
       try { await apiPatch("/auth/me", { direccion }); } catch { /* no es crítico */ }
       location.href = "mis-pedidos.html?nuevo=1";

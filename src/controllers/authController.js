@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { db } from '../store/index.js';
 import { firmarToken } from '../middleware/auth.js';
-import { PRODUCCION } from '../config/env.js';
+import { PRODUCCION, LITE } from '../config/env.js';
 import { badRequest, noAutorizado } from '../utils/errores.js';
 import { comparar, crearUsuario, actualizarUsuario, publico } from '../services/usuarios.js';
 
@@ -22,6 +22,7 @@ export const login = async (req, res) => {
   const u = await db.users.findOne({ email: email.trim().toLowerCase() });
   const ok = await comparar(password, u?.passwordHash ?? HASH_FALSO);
   if (!u || !ok || u.activo === false) throw noAutorizado('Credenciales inválidas');
+  if (LITE && u.rol === 'admin') throw noAutorizado('Esta cuenta no puede ingresar por esta dirección.'); // el admin entra solo por el panel completo
   const token = firmarToken(u);
   setCookieSesion(res, token);
   res.json({ token, user: publico(u) });

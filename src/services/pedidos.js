@@ -2,7 +2,7 @@ import { db, obtenerConfig } from '../store/index.js';
 import { ahora, antesDelCorte, esFecha, fechaDeEntrega } from '../utils/fecha.js';
 import { ErrorHttp, badRequest, conflicto, noEncontrado, prohibido, texto, numero } from '../utils/errores.js';
 import { ROLES_COCINA, ROLES_REPARTO } from '../middleware/auth.js';
-import { costoDeReceta, cotizar, precioPara } from './precios.js';
+import { costoDeReceta, cotizar, precioPara, tiposDelPlato } from './precios.js';
 import { exigirZona } from './zonas.js';
 import { consumoDePedidos } from './produccion.js';
 import { reponerInsumo } from './stock.js';
@@ -40,6 +40,23 @@ export async function fechasDeEntrega() {
  * Nombre, precio y total se leen de la base: lo que mande el navegador se ignora.
  */
 /**
+ * ¿A nombre de quién es el pedido? Normalmente del usuario logueado. El ADMIN puede mandar `clienteId`
+ * para cargarlo a nombre de un cliente (por ejemplo, empresas con pedido mensual que no ingresan al sistema).
+ * El tipo de cliente (lista de precios), la zona y los datos de contacto salen de ese cliente.
+ */
+async function clienteDelPedido(actor, body) {
+  if (actor.rol === 'admin' && body?.clienteId) {
+    const c = await db.users.get(String(body.clienteId));
+    if (!c || c.activo === false) throw noEncontrado('El cliente elegido no existe o está desactivado.');
+    if (c.rol !== 'cliente') throw badRequest('El usuario elegido no es un cliente.');
+    return { user: c, aNombreDe: true };
+  }
+  const user = await db.users.get(actor.id);
+  if (!user) throw noEncontrado('Usuario no encontrado');
+  return { user, aNombreDe: false };
+}
+
+/**
  * Arma el carrito con datos de la BASE (nunca del navegador): precios, costo de receta y descuento.
  * Lo usan crearPedido y cotizar, así lo que ve el cliente es exactamente lo que se cobra.
  */
@@ -57,15 +74,14 @@ async function armarCarrito(actor, body) {
   }
 
   const insumos = new Map((await db.insumos.list({})).map((i) => [String(i._id), i]));
-  const user = await db.users.get(actor.id);
-  if (!user) throw noEncontrado('Usuario no encontrado');
+  const { user } = await clienteDelPedido(actor, body);
   const tipo = user.tipoCliente || 'final'; // decide la lista de precios: final / empresa / descuento
   const items = [];
   for (const [id, qty] of pedidos) {
     if (qty > 50) throw badRequest('Máximo 50 unidades por plato.');
     const p = await db.products.get(id);
     if (!p || p.activo === false) throw badRequest('Un plato del carrito ya no está disponible. Actualizá el menú.');
-    if (p.soloEmpresas && tipo !== 'empresa' && user.rol !== 'admin') throw badRequest(`"${p.name}" es un plato del menú de empresas.`);
+    if (!tiposDelPlato(p).includes(tipo)) throw badRequest(`"${p.name}" no está disponible para este tipo de cliente.`);
     if (p.day !== dia) throw badRequest(`"${p.name}" no es del menú del ${dia}.`);
     items.push({ productId: String(p._id), name: p.name, price: precioPara(p, tipo), precioPublico: p.price, qty, costo: costoDeReceta(p.receta, insumos).costo });
   }
@@ -90,8 +106,7 @@ export async function crearPedido(actor, body) {
     if (ref.hora >= cfg.horaCorte) throw badRequest(`Pasó el horario de corte (${String(cfg.horaCorte).padStart(2, '0')}:00): ya no se reciben pedidos para hoy.`);
   }
 
-  const user = await db.users.get(actor.id);
-  if (!user) throw noEncontrado('Usuario no encontrado');
+  const { user, aNombreDe } = await clienteDelPedido(actor, body);
   const direccion = texto(body.direccion || user.direccion || '', 'La dirección de entrega', { max: 200 });
   const observaciones = texto(body.observaciones ?? '', 'Las observaciones', { max: 300, requerido: false });
   const medioPago = body.medioPago ?? 'efectivo';
@@ -108,7 +123,8 @@ export async function crearPedido(actor, body) {
     descuentoMonto: cot.descuentoMonto, costoTotal, totalAmount: cot.total, estado: 'confirmado',
     diaMenu: dia, fechaEntrega, direccion, observaciones, medioPago,
     pagado: false, stockDescontado: false, tomadoPor: null, repartidor: null, motivoCancelacion: '',
-    historial: [{ estado: 'confirmado', fecha: ahoraIso, por: user.nombre || user.email }],
+    cargadoPor: aNombreDe ? (actor.nombre || actor.email) : '',
+    historial: [{ estado: 'confirmado', fecha: ahoraIso, por: aNombreDe ? `${actor.nombre || 'Admin'} (a nombre del cliente)` : (user.nombre || user.email) }],
   });
   return decorar(pedido, horaCorte);
 }

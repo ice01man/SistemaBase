@@ -1,5 +1,5 @@
 import { db } from '../store/index.js';
-import { ingredientesDeReceta } from './precios.js';
+import { ingredientesDeReceta, TIPOS_CLIENTE } from './precios.js';
 import { badRequest, noEncontrado, texto, numero } from '../utils/errores.js';
 
 const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -50,7 +50,17 @@ export async function validarProducto(d, parcial = false) {
     };
   }
   if (d.activo !== undefined) out.activo = !!d.activo;
-  if (d.soloEmpresas !== undefined) out.soloEmpresas = !!d.soloEmpresas;
+  if (d.visiblePara !== undefined) {
+    if (!Array.isArray(d.visiblePara)) throw badRequest('visiblePara debe ser una lista de tipos de cliente.');
+    const tipos = [...new Set(d.visiblePara)];
+    if (!tipos.length) throw badRequest('Tildá al menos un tipo de cliente que pueda ver el plato.');
+    if (tipos.some((t) => !TIPOS_CLIENTE.includes(t))) throw badRequest('Tipo de cliente inválido (final, empresa o descuento).');
+    out.visiblePara = tipos;
+    out.soloEmpresas = tipos.length === 1 && tipos[0] === 'empresa';
+  } else if (d.soloEmpresas !== undefined) { // compatibilidad con la forma vieja
+    out.soloEmpresas = !!d.soloEmpresas;
+    out.visiblePara = d.soloEmpresas ? ['empresa'] : [...TIPOS_CLIENTE];
+  }
   const receta = await validarReceta(d.receta);
   if (receta !== undefined) {
     out.receta = receta;
